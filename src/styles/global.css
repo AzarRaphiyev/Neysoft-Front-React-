@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.tab-active {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.sub-tab-active {
+  background-color: #1e40af;
+  color: white;
+}
+
+.stok-sifir {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.stok-az {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+    font-size: 10px !important;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+    font-size: 10px !important;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm !important;
+    padding: 5mm !important;
+    margin: 0 !important;
+  }
+  .print-area table {
+    width: 100% !important;
+    font-size: 9px !important;
+  }
+  .print-area th,
+  .print-area td {
+    padding: 2px !important;
+    font-size: 9px !important;
+  }
+  .print-area h1,
+  .print-area h2,
+  .print-area h3 {
+    font-size: 12px !important;
+    margin: 2px 0 !important;
+  }
+  .print-area p {
+    margin: 1px 0 !important;
+    font-size: 9px !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Mobile Responsive Styles */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 39;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+body.sidebar-open {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  #root {
+    display: block !important;
+  }
+  aside {
+    position: fixed;
+    left: -16rem;
+    top: 0;
+    height: 100vh;
+    transition: left 0.3s ease;
+    z-index: 40;
+    overflow-y: auto;
+  }
+  aside.active {
+    left: 0;
+  }
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-top: 70px !important;
+  }
+  .header-bar {
+    display: flex !important;
+  }
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .p-6 {
+    padding: 0.75rem !important;
+  }
+  table {
+    font-size: 14px;
+  }
+  th,
+  td {
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 769px) {
+  .header-bar {
+    display: none !important;
+  }
+}
+
+/* Toast Animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}

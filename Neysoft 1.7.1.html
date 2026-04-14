@@ -1,0 +1,4001 @@
+<!doctype html>
+<html lang="az">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neysoft</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      * {
+        font-family: 'Inter', sans-serif;
+      }
+      .tab-active {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+      .sub-tab-active {
+        background-color: #1e40af;
+        color: white;
+      }
+      .stok-sifir {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+      .stok-az {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+      @media print {
+        body * {
+          visibility: hidden;
+          font-size: 10px !important;
+        }
+        .print-area,
+        .print-area * {
+          visibility: visible;
+          font-size: 10px !important;
+        }
+        .print-area {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 80mm !important;
+          padding: 5mm !important;
+          margin: 0 !important;
+        }
+        .print-area table {
+          width: 100% !important;
+          font-size: 9px !important;
+        }
+        .print-area th,
+        .print-area td {
+          padding: 2px !important;
+          font-size: 9px !important;
+        }
+        .print-area h1,
+        .print-area h2,
+        .print-area h3 {
+          font-size: 12px !important;
+          margin: 2px 0 !important;
+        }
+        .print-area p {
+          margin: 1px 0 !important;
+          font-size: 9px !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+      /* Mobile Responsive Styles */
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 39;
+      }
+      .sidebar-overlay.active {
+        display: block;
+      }
+      body.sidebar-open {
+        overflow: hidden;
+      }
+      @media (max-width: 768px) {
+        #app {
+          display: block !important;
+        }
+        aside {
+          position: fixed;
+          left: -16rem;
+          top: 0;
+          height: 100vh;
+          transition: left 0.3s ease;
+          z-index: 40;
+          overflow-y: auto;
+        }
+        aside.active {
+          left: 0;
+        }
+        .main-content {
+          margin-left: 0 !important;
+          width: 100% !important;
+          padding-top: 70px !important;
+        }
+        .header-bar {
+          display: flex !important;
+        }
+        /* Ensure tables are scrollable on mobile */
+        .overflow-x-auto {
+          -webkit-overflow-scrolling: touch;
+        }
+        /* Adjust heading sizes on mobile */
+        h2 {
+          font-size: 1.5rem !important;
+        }
+        h3 {
+          font-size: 1.25rem !important;
+        }
+        /* Adjust button and input sizes for touch */
+        button,
+        input,
+        select,
+        textarea {
+          min-height: 44px;
+          font-size: 16px;
+        }
+        /* Reduce padding on mobile */
+        .p-6 {
+          padding: 0.75rem !important;
+        }
+        /* Make tables horizontally scrollable */
+        table {
+          font-size: 14px;
+        }
+        th,
+        td {
+          white-space: nowrap;
+        }
+      }
+      @media (min-width: 769px) {
+        .header-bar {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Mobile Header Bar -->
+    <div
+      class="header-bar hidden fixed top-0 left-0 right-0 bg-blue-600 text-white z-50 px-4 py-3 items-center justify-between shadow-md"
+    >
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="text-white hover:text-gray-200 transition">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+        <h1 class="text-lg font-bold"><i class="fas fa-store"></i> Geyim Mağazası</h1>
+      </div>
+    </div>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div id="app" class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside class="w-64 bg-blue-600 text-white shadow-xl flex-shrink-0" id="sidebar">
+        <div class="p-4 relative">
+          <!-- Mobile Close Button -->
+          <button
+            onclick="toggleSidebar()"
+            class="md:hidden absolute -top-2 -right-2 text-white hover:text-gray-200 p-2 bg-red-500 rounded-full w-9 h-9 flex items-center justify-center shadow-lg z-50"
+          >
+            <i class="fas fa-times text-sm"></i>
+          </button>
+          <h1 class="text-xl font-bold mb-6"><i class="fas fa-store"></i> Geyim Mağazası</h1>
+          <div class="space-y-2">
+            <button
+              onclick="modulDeyis('dashboard')"
+              class="tab-button w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3"
+              data-tab="dashboard"
+            >
+              <i class="fas fa-chart-line"></i> İdarə Paneli
+            </button>
+            <button
+              onclick="modulDeyis('umumiAnbar')"
+              class="tab-button w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3"
+              data-tab="umumiAnbar"
+            >
+              <i class="fas fa-warehouse"></i> Ümumi Anbar
+            </button>
+            <button
+              onclick="modulDeyis('satis')"
+              class="tab-button w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3"
+              data-tab="satis"
+            >
+              <i class="fas fa-shopping-cart"></i> Satış
+            </button>
+            <button
+              onclick="modulDeyis('satisTarixce')"
+              class="tab-button w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3"
+              data-tab="satisTarixce"
+            >
+              <i class="fas fa-history"></i> Satış Tarixçəsi
+            </button>
+            <button
+              onclick="modulDeyis('maliyye')"
+              class="tab-button w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3"
+              data-tab="maliyye"
+            >
+              <i class="fas fa-wallet"></i> Maliyyə
+            </button>
+            <button
+              onclick="modulDeyis('parametrler')"
+              class="tab-button w-full text-left px-4 py-3 rounded-lg transition flex items-center gap-3"
+              data-tab="parametrler"
+            >
+              <i class="fas fa-cog"></i> Parametrlər
+            </button>
+          </div>
+        </div>
+        <div class="p-4 border-t border-blue-500 mt-auto">
+          <button
+            onclick="dataExportEt()"
+            class="w-full bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-download"></i> Yedəkləmə
+          </button>
+          <p id="currentDate" class="text-xs text-blue-200 mt-3 text-center"></p>
+        </div>
+      </aside>
+      <!-- Main Content -->
+      <main class="flex-1 p-6 overflow-y-auto main-content pt-16 md:pt-6 md:ml-0">
+        <!-- Dashboard -->
+        <div id="modul-dashboard" class="modul-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">İdarə Paneli</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div
+              class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-6"
+            >
+              <p class="text-blue-100 text-sm">Günlük Satış</p>
+              <h3 class="text-3xl font-bold" id="dash-gunluk">0.00 ₼</h3>
+              <p class="text-blue-100 text-xs mt-2" id="dash-gunluk-say">0 əməliyyat</p>
+            </div>
+            <div
+              class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl shadow-lg p-6"
+            >
+              <p class="text-green-100 text-sm">Aylıq Satış</p>
+              <h3 class="text-3xl font-bold" id="dash-ayliq">0.00 ₼</h3>
+              <p class="text-green-100 text-xs mt-2" id="dash-ayliq-say">0 əməliyyat</p>
+            </div>
+            <div
+              class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl shadow-lg p-6"
+            >
+              <p class="text-purple-100 text-sm">Aylıq Mənfəət</p>
+              <h3 class="text-3xl font-bold" id="dash-menfeet">0.00 ₼</h3>
+            </div>
+            <div
+              class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl shadow-lg p-6"
+            >
+              <p class="text-orange-100 text-sm">Anbar Dəyəri</p>
+              <h3 class="text-3xl font-bold" id="dash-anbar">0.00 ₼</h3>
+              <p class="text-orange-100 text-xs mt-2" id="dash-anbar-say">0 məhsul</p>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4 text-red-600">
+              <i class="fas fa-exclamation-triangle"></i> Stok Xəbərdarlıqları
+            </h3>
+            <div id="stok-xeberdar"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-semibold mb-4"><i class="fas fa-list"></i> Son Satışlar</h3>
+            <div id="son-satislar"></div>
+          </div>
+        </div>
+        <!-- Ümumi Anbar -->
+        <div id="modul-umumiAnbar" class="modul-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-warehouse"></i> Ümumi Anbar
+          </h2>
+          <!-- Sub Navigation -->
+          <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+            <div class="flex gap-2">
+              <button
+                onclick="umumiAnbarTab('malDaxil')"
+                class="sub-tab-button px-4 py-2 rounded-lg transition text-sm"
+                data-subtab="malDaxil"
+              >
+                <i class="fas fa-plus"></i> Mal Daxil Et
+              </button>
+              <button
+                onclick="umumiAnbarTab('daxilolmaTarixce')"
+                class="sub-tab-button px-4 py-2 rounded-lg transition text-sm"
+                data-subtab="daxilolmaTarixce"
+              >
+                <i class="fas fa-clipboard-list"></i> Daxil Olma Tarixçəsi
+              </button>
+              <button
+                onclick="umumiAnbarTab('anbar')"
+                class="sub-tab-button px-4 py-2 rounded-lg transition text-sm"
+                data-subtab="anbar"
+              >
+                <i class="fas fa-boxes"></i> Anbar Siyahısı
+              </button>
+            </div>
+          </div>
+          <!-- Mal Daxil Et Sub-Modul -->
+          <div id="umumiAnbar-malDaxil" class="sub-modul-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+              <i class="fas fa-plus"></i> Mal Daxil Et
+            </h2>
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <h3 class="text-xl font-semibold mb-4">Qaimə Məlumatları</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Qaimə Kodu *</label>
+                  <input
+                    type="text"
+                    id="qaime-kod"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    placeholder="QM-001"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Təchizatçı</label>
+                  <select
+                    id="qaime-techizatci"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  ></select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Daxil Olma Tarixi</label
+                  >
+                  <input
+                    type="date"
+                    id="qaime-tarix"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <h3 class="text-xl font-semibold mb-4">Məhsul Əlavə Et</h3>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                <input
+                  type="text"
+                  id="yeni-mal-barkod"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Barkod *"
+                  onkeypress="barkodEnterYoxla(event, 'daxil')"
+                />
+                <input
+                  type="text"
+                  id="yeni-mal-ad"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Malın Adı *"
+                />
+                <select id="yeni-mal-nov" class="px-4 py-2 border rounded-lg"></select>
+                <select id="yeni-mal-reng" class="px-4 py-2 border rounded-lg">
+                  <option value="">Rəng seçin (istəyə bağlı)</option>
+                </select>
+                <select id="yeni-mal-olcu" class="px-4 py-2 border rounded-lg"></select>
+                <input
+                  type="number"
+                  id="yeni-mal-miqdar"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Miqdar *"
+                  min="1"
+                />
+                <input
+                  type="number"
+                  id="yeni-mal-alis"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Alış Qiyməti *"
+                  step="0.01"
+                />
+                <input
+                  type="number"
+                  id="yeni-mal-satis"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Satış Qiyməti *"
+                  step="0.01"
+                />
+              </div>
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p class="text-sm text-blue-800">
+                  <i class="fas fa-lightbulb"></i> <strong>İpucu:</strong> Barkod oxuyucu ilə
+                  barkodu oxudun və Enter basın. Əgər məhsul sistemdə varsa, avtomatik doldurulacaq.
+                </p>
+              </div>
+              <button
+                onclick="mehsulElave()"
+                class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+              >
+                <i class="fas fa-plus"></i> Məhsul Əlavə Et
+              </button>
+            </div>
+            <div id="mehsul-cedvel-container" class="bg-white rounded-xl shadow-md p-6 hidden">
+              <h3 class="text-xl font-semibold mb-4">Əlavə Edilmiş Məhsullar</h3>
+              <div class="overflow-x-auto mb-4">
+                <table class="w-full" id="mehsul-cedvel">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="px-4 py-3 text-left">Barkod</th>
+                      <th class="px-4 py-3 text-left">Malın Adı</th>
+                      <th class="px-4 py-3 text-left">Növ</th>
+                      <th class="px-4 py-3 text-left">Rəng</th>
+                      <th class="px-4 py-3 text-left">Ölçü</th>
+                      <th class="px-4 py-3 text-right">Miqdar</th>
+                      <th class="px-4 py-3 text-right">Alış Qiyməti</th>
+                      <th class="px-4 py-3 text-right">Satış Qiyməti</th>
+                      <th class="px-4 py-3 text-right">Cəmi</th>
+                      <th class="px-4 py-3 text-center">Əməliyyat</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mehsul-tbody"></tbody>
+                  <tfoot class="bg-gray-50 font-bold">
+                    <tr>
+                      <td colspan="6" class="px-4 py-3 text-right text-lg">Ümumi Məbləğ:</td>
+                      <td id="umumi-mebleg" class="px-4 py-3 text-right text-lg text-blue-600">
+                        0.00 ₼
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div class="flex justify-end">
+                <button
+                  onclick="qaimeyiSaxla()"
+                  class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700"
+                >
+                  <i class="fas fa-save"></i> Qaiməni Saxla
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Daxil Olma Tarixçəsi Sub-Modul -->
+          <div id="umumiAnbar-daxilolmaTarixce" class="sub-modul-content hidden">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-clipboard-list"></i> Mal Daxil Olma Tarixçəsi
+              </h2>
+              <button
+                onclick="daxilolmaTarixceExport()"
+                class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+              >
+                <i class="fas fa-file-export"></i> Excel Export
+              </button>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-sm mb-2">Başlama Tarixi</label
+                  ><input
+                    type="date"
+                    id="daxilolma-baslama"
+                    class="w-full px-4 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm mb-2">Bitmə Tarixi</label
+                  ><input
+                    type="date"
+                    id="daxilolma-bitme"
+                    class="w-full px-4 py-2 border rounded-lg"
+                  />
+                </div>
+                <div class="flex items-end">
+                  <button
+                    onclick="daxilolmaTarixceFilter()"
+                    class="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    <i class="fas fa-search"></i> Axtar
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="px-4 py-3 text-left">Qaimə Kodu</th>
+                      <th class="px-4 py-3 text-left">Tarix</th>
+                      <th class="px-4 py-3 text-left">Təchizatçı</th>
+                      <th class="px-4 py-3 text-right">Məhsul Sayı</th>
+                      <th class="px-4 py-3 text-right">Ümumi Məbləğ</th>
+                      <th class="px-4 py-3 text-center">Qaytarılıb</th>
+                      <th class="px-4 py-3 text-center">Əməliyyat</th>
+                    </tr>
+                  </thead>
+                  <tbody id="daxilolma-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- Anbar Sub-Modul -->
+          <div id="umumiAnbar-anbar" class="sub-modul-content hidden">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-boxes"></i> Anbar Siyahısı
+              </h2>
+              <button
+                onclick="anbarExportExcel()"
+                class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+              >
+                <i class="fas fa-file-export"></i> Excel Export
+              </button>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  id="anbar-axtar"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Barkod və ya mal adı ilə axtar..."
+                  onkeyup="anbarYenile()"
+                />
+                <select
+                  id="anbar-nov-filter"
+                  class="px-4 py-2 border rounded-lg"
+                  onchange="anbarYenile()"
+                ></select>
+                <label class="flex items-center gap-2 px-4 py-2">
+                  <input
+                    type="checkbox"
+                    id="anbar-sifir"
+                    onchange="anbarYenile()"
+                    class="w-4 h-4"
+                  />
+                  <span class="text-sm">Qalığı 0 olanları göstər</span>
+                </label>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="px-4 py-3 text-left">Barkod</th>
+                      <th class="px-4 py-3 text-left">Malın Adı</th>
+                      <th class="px-4 py-3 text-left">Növ</th>
+                      <th class="px-4 py-3 text-left">Rəng</th>
+                      <th class="px-4 py-3 text-left">Ölçü</th>
+                      <th class="px-4 py-3 text-right">Qalıq</th>
+                      <th class="px-4 py-3 text-right">Alış Qiyməti</th>
+                      <th class="px-4 py-3 text-right">Satış Qiyməti</th>
+                      <th class="px-4 py-3 text-right">Ümumi Dəyər</th>
+                      <th class="px-4 py-3 text-center">Əməliyyat</th>
+                    </tr>
+                  </thead>
+                  <tbody id="anbar-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Satış -->
+        <div id="modul-satis" class="modul-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-shopping-cart"></i> Yeni Satış
+          </h2>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+              <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">Müştəri Məlumatları</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    id="musteri-ad"
+                    class="px-4 py-2 border rounded-lg"
+                    placeholder="Müştəri adı"
+                  />
+                  <input
+                    type="tel"
+                    id="musteri-tel"
+                    class="px-4 py-2 border rounded-lg"
+                    placeholder="Telefon"
+                  />
+                </div>
+              </div>
+              <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Məhsul Seç</h3>
+                <input
+                  type="text"
+                  id="satis-axtar"
+                  class="w-full px-4 py-2 border rounded-lg mb-4"
+                  placeholder="Barkod və ya mal adı ilə axtar..."
+                  onkeyup="satisAxtar()"
+                  onkeypress="barkodEnterYoxla(event, 'satis')"
+                />
+                <div id="satis-mehsul-list" class="grid gap-2 max-h-96 overflow-y-auto"></div>
+              </div>
+            </div>
+            <div>
+              <div class="bg-white rounded-xl shadow-md p-6 sticky top-6">
+                <h3 class="text-lg font-semibold mb-4">
+                  <i class="fas fa-shopping-cart"></i> Səbət
+                </h3>
+                <div id="sebet-items" class="mb-4 max-h-96 overflow-y-auto"></div>
+                <div class="border-t pt-4 space-y-2">
+                  <div class="flex justify-between">
+                    <span>Ara Cəmi:</span><span id="sebet-ara-cemi">0.00 ₼</span>
+                  </div>
+                  <div class="flex justify-between text-red-600">
+                    <span>Endirim:</span><span id="sebet-endirim">0.00 ₼</span>
+                  </div>
+                  <!-- Ümumi Endirim -->
+                  <div class="border-t pt-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2"
+                      >Ümumi Qəbz Endirimi</label
+                    >
+                    <div class="flex gap-2">
+                      <select
+                        id="umumi-endirim-tipi"
+                        onchange="umumiEndirimTipiDeyis()"
+                        class="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      >
+                        <option value="">Yoxdur</option>
+                        <option value="faiz">% Endirim</option>
+                        <option value="mebleg">₼ Endirim</option>
+                      </select>
+                      <input
+                        type="number"
+                        id="umumi-endirim-deyer"
+                        min="0"
+                        step="0.01"
+                        class="w-24 px-3 py-2 border rounded-lg text-sm"
+                        placeholder="0"
+                        onchange="umumiEndirimDeyerDeyis()"
+                        disabled
+                      />
+                    </div>
+                    <div id="umumi-endirim-mesaj" class="text-xs text-red-600 mt-1 hidden"></div>
+                  </div>
+                  <div class="flex justify-between text-xl font-bold border-t pt-2">
+                    <span>YEKUN:</span><span id="sebet-yekun" class="text-blue-600">0.00 ₼</span>
+                  </div>
+                </div>
+                <select id="odenis-nov" class="w-full px-4 py-2 border rounded-lg my-4">
+                  <option value="Nağd">Nağd</option>
+                  <option value="Kart">Kart</option>
+                  <option value="Köçürmə">Köçürmə</option>
+                </select>
+                <button
+                  onclick="satisiTamamla()"
+                  id="satis-btn"
+                  class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                >
+                  <i class="fas fa-check"></i> Satışı Tamamla
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Satış Tarixçəsi -->
+        <div id="modul-satisTarixce" class="modul-content hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-3xl font-bold text-gray-800">
+              <i class="fas fa-history"></i> Satış Tarixçəsi
+            </h2>
+            <button
+              onclick="satisTarixceExport()"
+              class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+            >
+              <i class="fas fa-file-export"></i> Excel Export
+            </button>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm mb-2">Başlama Tarixi</label
+                ><input
+                  type="date"
+                  id="tarixce-baslama"
+                  class="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label class="block text-sm mb-2">Bitmə Tarixi</label
+                ><input type="date" id="tarixce-bitme" class="w-full px-4 py-2 border rounded-lg" />
+              </div>
+              <div class="flex items-end">
+                <button
+                  onclick="satisTarixceFilter()"
+                  class="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  <i class="fas fa-search"></i> Axtar
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-100">
+                  <tr>
+                    <th class="px-4 py-3 text-left">Qəbz №</th>
+                    <th class="px-4 py-3 text-left">Tarix</th>
+                    <th class="px-4 py-3 text-left">Müştəri</th>
+                    <th class="px-4 py-3 text-right">Məbləğ</th>
+                    <th class="px-4 py-3 text-right">Endirim</th>
+                    <th class="px-4 py-3 text-right">Yekun</th>
+                    <th class="px-4 py-3 text-left">Ödəniş</th>
+                    <th class="px-4 py-3 text-center">Əməliyyat</th>
+                  </tr>
+                </thead>
+                <tbody id="tarixce-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- Maliyyə -->
+        <div id="modul-maliyye" class="modul-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-wallet"></i> Maliyyə
+          </h2>
+          <!-- Sub Navigation -->
+          <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+            <div class="flex gap-2">
+              <button
+                onclick="maliyyeTab('umumi')"
+                class="sub-tab-button px-4 py-2 rounded-lg transition text-sm"
+                data-subtab="umumi"
+              >
+                <i class="fas fa-chart-pie"></i> Ümumi
+              </button>
+              <button
+                onclick="maliyyeTab('xercler')"
+                class="sub-tab-button px-4 py-2 rounded-lg transition text-sm"
+                data-subtab="xercler"
+              >
+                <i class="fas fa-money-bill-wave"></i> Xərclər
+              </button>
+              <button
+                onclick="maliyyeTab('zHesabat')"
+                class="sub-tab-button px-4 py-2 rounded-lg transition text-sm"
+                data-subtab="zHesabat"
+              >
+                <i class="fas fa-file-invoice"></i> Z Hesabat
+              </button>
+            </div>
+          </div>
+          <!-- Ümumi Maliyyə Sub-Modul -->
+          <div id="maliyye-umumi" class="sub-modul-content">
+            <!-- Tarix Aralığı Filter -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <h3 class="text-xl font-semibold mb-4">
+                <i class="fas fa-calendar-alt"></i> Tarix Aralığı
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Başlama Tarixi</label>
+                  <input
+                    type="date"
+                    id="maliyye-baslama"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Bitmə Tarixi</label>
+                  <input
+                    type="date"
+                    id="maliyye-bitme"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div class="flex items-end">
+                  <button
+                    onclick="maliyyeFilter()"
+                    class="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    <i class="fas fa-search"></i> Axtar
+                  </button>
+                </div>
+                <div class="flex items-end">
+                  <button
+                    onclick="maliyyeExcelExport()"
+                    class="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+                  >
+                    <i class="fas fa-file-excel"></i> Excel Yüklə
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <div
+                class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-green-100 text-sm mb-1">Günlük Gəlir</p>
+                <h3 class="text-2xl font-bold" id="mal-gunluk-gelir">0.00 ₼</h3>
+                <p class="text-green-100 text-xs mt-2" id="mal-gunluk-gelir-foiz">0%</p>
+              </div>
+              <div
+                class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-blue-100 text-sm mb-1">Günlük Mənfəət</p>
+                <h3 class="text-2xl font-bold" id="mal-gunluk-menfeet">0.00 ₼</h3>
+                <p class="text-blue-100 text-xs mt-2" id="mal-gunluk-menfeet-foiz">0%</p>
+              </div>
+              <div
+                class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-emerald-100 text-sm mb-1">Aylıq Gəlir</p>
+                <h3 class="text-2xl font-bold" id="mal-ayliq-gelir">0.00 ₼</h3>
+                <p class="text-emerald-100 text-xs mt-2" id="mal-ayliq-gelir-foiz">0%</p>
+              </div>
+              <div
+                class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-purple-100 text-sm mb-1">Aylıq Mənfəət</p>
+                <h3 class="text-2xl font-bold" id="mal-ayliq-menfeet">0.00 ₼</h3>
+                <p class="text-purple-100 text-xs mt-2" id="mal-ayliq-menfeet-foiz">0%</p>
+              </div>
+              <div
+                class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-red-100 text-sm mb-1">Günlük Xərc</p>
+                <h3 class="text-2xl font-bold" id="mal-gunluk-xerc">0.00 ₼</h3>
+              </div>
+              <div
+                class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-orange-100 text-sm mb-1">Aylıq Xərc</p>
+                <h3 class="text-2xl font-bold" id="mal-ayliq-xerc">0.00 ₼</h3>
+              </div>
+              <div
+                class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-indigo-100 text-sm mb-1">Seçilən Dövrdə Gəlir</p>
+                <h3 class="text-2xl font-bold" id="mal-secilen-gelir">0.00 ₼</h3>
+              </div>
+              <div
+                class="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl shadow-lg p-6"
+              >
+                <p class="text-pink-100 text-sm mb-1">Seçilən Dövrdə Mənfəət</p>
+                <h3 class="text-2xl font-bold" id="mal-secilen-menfeet">0.00 ₼</h3>
+              </div>
+            </div>
+            <!-- Günlük Pul Axını Cədvəli -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <h3 class="text-xl font-semibold mb-4">
+                <i class="fas fa-chart-line"></i> Günlük Pul Axını
+              </h3>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="px-4 py-3 text-left">Tarix</th>
+                      <th class="px-4 py-3 text-right">Gəlir</th>
+                      <th class="px-4 py-3 text-right">Xərc</th>
+                      <th class="px-4 py-3 text-right">Mənfəət</th>
+                      <th class="px-4 py-3 text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="gunluk-axin-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- Xərclər Sub-Modul -->
+          <div id="maliyye-xercler" class="sub-modul-content hidden">
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <h3 class="text-xl font-semibold mb-4">Xərc Əlavə Et</h3>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input
+                  type="text"
+                  id="xerc-ad"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Xərcin adı"
+                />
+                <input
+                  type="number"
+                  id="xerc-mebleg"
+                  class="px-4 py-2 border rounded-lg"
+                  placeholder="Məbləğ"
+                  step="0.01"
+                />
+                <input type="date" id="xerc-tarix" class="px-4 py-2 border rounded-lg" />
+                <button
+                  onclick="xercElave()"
+                  class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+                >
+                  <i class="fas fa-plus"></i> Əlavə Et
+                </button>
+              </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <h3 class="text-xl font-semibold mb-4">Xərc Tarixçəsi</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="px-4 py-3 text-left">Tarix</th>
+                      <th class="px-4 py-3 text-left">Xərcin Adı</th>
+                      <th class="px-4 py-3 text-right">Məbləğ</th>
+                      <th class="px-4 py-3 text-center">Əməliyyat</th>
+                    </tr>
+                  </thead>
+                  <tbody id="xerc-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- Z Hesabat Sub-Modul -->
+          <div id="maliyye-zHesabat" class="sub-modul-content hidden">
+            <div class="flex justify-between items-center mb-6 no-print">
+              <h2 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-file-invoice"></i> Z Hesabat
+              </h2>
+              <button
+                onclick="zHesabatCap()"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              >
+                <i class="fas fa-print"></i> Çap Et
+              </button>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Başlama Tarixi</label>
+                  <input type="date" id="z-baslama" class="w-full px-4 py-2 border rounded-lg" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Bitmə Tarixi</label>
+                  <input type="date" id="z-bitme" class="w-full px-4 py-2 border rounded-lg" />
+                </div>
+              </div>
+              <div class="mt-4">
+                <button
+                  onclick="zHesabatYarat()"
+                  class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 text-lg font-semibold"
+                >
+                  <i class="fas fa-chart-bar"></i> Hesabat Yarat
+                </button>
+              </div>
+            </div>
+            <div id="z-hesabat-content" class="bg-white rounded-xl shadow-md p-6 hidden print-area">
+              <!-- Z hesabat buraya yüklənəcək -->
+            </div>
+          </div>
+        </div>
+        <!-- Parametrlər -->
+        <div id="modul-parametrler" class="modul-content hidden">
+          <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-cog"></i> Parametrlər
+          </h2>
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4">Məhsul Kateqoriyaları</h3>
+            <div class="flex gap-4 mb-4">
+              <input
+                type="text"
+                id="yeni-kateqoriya"
+                class="flex-1 px-4 py-2 border rounded-lg"
+                placeholder="Yeni kateqoriya"
+              />
+              <button
+                onclick="kateqoriyaElave()"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              >
+                <i class="fas fa-plus"></i> Əlavə Et
+              </button>
+            </div>
+            <div id="kateqoriya-list" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4"><i class="fas fa-palette"></i> Rənglər</h3>
+            <div class="flex gap-4 mb-4">
+              <input
+                type="text"
+                id="yeni-rng-ad"
+                class="flex-1 px-4 py-2 border rounded-lg"
+                placeholder="Rəngin adı (məs: Qırmızı)"
+              />
+              <input
+                type="color"
+                id="yeni-rng-kod"
+                class="w-16 h-10 border rounded-lg cursor-pointer"
+                value="#ff0000"
+              />
+              <button
+                onclick="rngElave()"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              >
+                <i class="fas fa-plus"></i> Əlavə Et
+              </button>
+            </div>
+            <div id="rng-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4">
+              <i class="fas fa-ruler-horizontal"></i> Ölçülər
+            </h3>
+            <div class="flex gap-4 mb-4">
+              <input
+                type="text"
+                id="yeni-olcu-ad"
+                class="flex-1 px-4 py-2 border rounded-lg"
+                placeholder="Ölçü (məs: S, M, L, XL)"
+              />
+              <button
+                onclick="olcuElave()"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              >
+                <i class="fas fa-plus"></i> Əlavə Et
+              </button>
+            </div>
+            <div id="olcu-list" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4">Təchizatçılar</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <input
+                type="text"
+                id="yeni-techizatci-ad"
+                class="px-4 py-2 border rounded-lg"
+                placeholder="Təchizatçı adı"
+              />
+              <input
+                type="tel"
+                id="yeni-techizatci-tel"
+                class="px-4 py-2 border rounded-lg"
+                placeholder="Telefon"
+              />
+              <button
+                onclick="techizatciElave()"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              >
+                <i class="fas fa-plus"></i> Əlavə Et
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-100">
+                  <tr>
+                    <th class="px-4 py-3 text-left">Ad</th>
+                    <th class="px-4 py-3 text-left">Telefon</th>
+                    <th class="px-4 py-3 text-center">Əməliyyat</th>
+                  </tr>
+                </thead>
+                <tbody id="techizatci-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Mağaza Məlumatları -->
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold mb-4">
+              <i class="fas fa-store"></i> Mağaza Məlumatları (Qəbzdə Görsənəcək)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Mağaza Adı</label>
+                <input
+                  type="text"
+                  id="magaza-ad"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Məsələn: Elite Fashion"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ünvan</label>
+                <input
+                  type="text"
+                  id="magaza-unvan"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Məsələn: Bakı şəh., Nəsimi ray."
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                <input
+                  type="tel"
+                  id="magaza-tel"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Məsələn: +994 XX XXX XX XX"
+                />
+              </div>
+            </div>
+            <button
+              onclick="magazaMelumatSaxla()"
+              class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            >
+              <i class="fas fa-save"></i> Saxla
+            </button>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-xl font-semibold mb-4 text-red-600">
+              <i class="fas fa-exclamation-triangle"></i> Məlumat İdarəetməsi
+            </h3>
+            <button
+              onclick="dataTemizle()"
+              class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+            >
+              <i class="fas fa-trash"></i> Bütün Məlumatları Sil
+            </button>
+            <p class="text-sm text-gray-600 mt-2">
+              <i class="fas fa-exclamation-triangle"></i> Diqqət: Bu əməliyyat bütün məlumatları
+              siləcək və geri qaytarıla bilməz!
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+    <!-- Modallar -->
+    <div
+      id="modal-satis-detay"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto"
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">Satış Detalları</h3>
+            <button
+              onclick="modalBagla('modal-satis-detay')"
+              class="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="satis-detay-content"></div>
+        </div>
+      </div>
+    </div>
+    <div
+      id="modal-qebz"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">Qəbz</h3>
+            <button
+              onclick="modalBagla('modal-qebz')"
+              class="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="qebz-content" class="print-area"></div>
+          <div class="flex gap-3 mt-6">
+            <button
+              onclick="qebzCap()"
+              class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            >
+              <i class="fas fa-print"></i> Çap Et
+            </button>
+            <button
+              onclick="modalBagla('modal-qebz')"
+              class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700"
+            >
+              Bağla
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal: Qaytarma -->
+    <div
+      id="modal-qaytarma"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto"
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-red-600">
+              <i class="fas fa-undo"></i> Mal Qaytarması
+            </h3>
+            <button
+              onclick="modalBagla('modal-qaytarma')"
+              class="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="qaytarma-content"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal: Qaimə Detalları -->
+    <div
+      id="modal-qaime-detay"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto"
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">Qaimə Detalları</h3>
+            <button
+              onclick="modalBagla('modal-qaime-detay')"
+              class="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="qaime-detay-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Təchizatçıya Qaytarma -->
+    <div
+      id="modal-techizatci-qaytarma"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto"
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-orange-600">
+              <i class="fas fa-undo-alt"></i> Təchizatçıya Mal Qaytarması
+            </h3>
+            <button
+              onclick="modalBagla('modal-techizatci-qaytarma')"
+              class="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="techizatci-qaytarma-content"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal: Anbar Detay (Qaimə Məlumatları) -->
+    <div
+      id="modal-anbar-detay"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl max-w-5xl w-full mx-4 max-h-screen overflow-y-auto"
+      >
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-blue-600">
+              <i class="fas fa-file-invoice"></i> Qaimə Məlumatları
+            </h3>
+            <button
+              onclick="modalBagla('modal-anbar-detay')"
+              class="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="anbar-detay-content"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      let DATA = {
+        anbar: [],
+        kateqoriyalar: [
+          { id: 1, nov_adi: 'Papaq' },
+          { id: 2, nov_adi: 'Şalvar' },
+          { id: 3, nov_adi: 'T-Shirt' },
+          { id: 4, nov_adi: 'Cins' },
+          { id: 5, nov_adi: 'Klassik ayaqqabı' },
+          { id: 6, nov_adi: 'Krasofka' },
+          { id: 7, nov_adi: 'Palto' },
+          { id: 8, nov_adi: 'Kurtka' },
+          { id: 9, nov_adi: 'Köynək' },
+        ],
+        rengler: [
+          { id: 1, ad: 'Qara', kod: '#000000' },
+          { id: 2, ad: 'Ağ', kod: '#FFFFFF' },
+          { id: 3, ad: 'Qırmızı', kod: '#FF0000' },
+          { id: 4, ad: 'Göy', kod: '#0000FF' },
+          { id: 5, ad: 'Yaşıl', kod: '#008000' },
+          { id: 6, ad: 'Sarı', kod: '#FFFF00' },
+          { id: 7, ad: 'Narıncı', kod: '#FFA500' },
+          { id: 8, ad: 'Bənövşəyi', kod: '#800080' },
+        ],
+        olculer: [
+          { id: 1, ad: 'S' },
+          { id: 2, ad: 'M' },
+          { id: 3, ad: 'L' },
+          { id: 4, ad: 'XL' },
+          { id: 5, ad: 'XXL' },
+          { id: 6, ad: 'XXXL' },
+          { id: 7, ad: '36' },
+          { id: 8, ad: '37' },
+          { id: 9, ad: '38' },
+          { id: 10, ad: '39' },
+          { id: 11, ad: '40' },
+          { id: 12, ad: '41' },
+          { id: 13, ad: '42' },
+          { id: 14, ad: '43' },
+          { id: 15, ad: '44' },
+        ],
+        techizatcilar: [],
+        qaimeler: [], // qaytarmalar: [] array each qaime will have
+        satislar: [],
+        xercler: [],
+        sebet: [],
+        qaytarmalar: [], // Müştəri qaytarmaları
+        magazaMelumat: {
+          ad: 'MAĞAZA ADI',
+          unvan: 'Bakı şəh., Nəsimi ray.',
+          telefon: '+994 XX XXX XX XX',
+        },
+        umumiEndirim: {
+          tipi: null,
+          deyer: 0,
+        },
+      };
+      let yeniMehsullar = [];
+      let activeModul = 'dashboard';
+      let activeUmumiAnbarTab = 'malDaxil';
+      let activeMaliyyeTab = 'umumi';
+
+      // Mobile Sidebar Toggle
+      function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sidebar && overlay) {
+          const isActive = sidebar.classList.contains('active');
+          if (isActive) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+          } else {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+            document.body.classList.add('sidebar-open');
+          }
+        }
+      }
+
+      function init() {
+        loadData();
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('qaime-tarix').value = today;
+        document.getElementById('xerc-tarix').value = today;
+        updateCurrentDate();
+        modulDeyis('dashboard');
+        kateqoriyalariYukle();
+        rengleriYukle();
+        olculeriYukle();
+        techizatcilariYukle();
+        magazaMelumatYukle();
+        // Close sidebar on module change on mobile
+        if (window.innerWidth <= 768) {
+          document.querySelectorAll('.tab-button').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              toggleSidebar();
+            });
+          });
+        }
+      }
+
+      function loadData() {
+        try {
+          const saved = localStorage.getItem('erpData');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            DATA.anbar = parsed.anbar || [];
+            DATA.satislar = parsed.satislar || [];
+            DATA.xercler = parsed.xercler || [];
+            DATA.qaimeler = parsed.qaimeler || [];
+            DATA.qaytarmalar = parsed.qaytarmalar || [];
+            DATA.techizatcilar = parsed.techizatcilar || [];
+            DATA.magazaMelumat = parsed.magazaMelumat || DATA.magazaMelumat;
+          }
+        } catch (e) {
+          console.log('Köhnə məlumatlar yüklənmədi, yeni başlayırıq');
+        }
+      }
+
+      function saveData() {
+        try {
+          const dataToSave = {
+            anbar: DATA.anbar,
+            satislar: DATA.satislar,
+            xercler: DATA.xercler,
+            qaimeler: DATA.qaimeler,
+            qaytarmalar: DATA.qaytarmalar,
+            techizatcilar: DATA.techizatcilar,
+            magazaMelumat: DATA.magazaMelumat,
+          };
+          localStorage.setItem('erpData', JSON.stringify(dataToSave));
+        } catch (e) {
+          console.log('Məlumat saxlanılmadı:', e.message);
+        }
+      }
+
+      function updateCurrentDate() {
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString(
+          'az-AZ',
+          { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+        );
+      }
+
+      function modulDeyis(modul) {
+        document.querySelectorAll('.modul-content').forEach((el) => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-button').forEach((btn) => {
+          btn.classList.remove('tab-active');
+        });
+        document.getElementById('modul-' + modul).classList.remove('hidden');
+        const activeTab = document.querySelector(`[data-tab="${modul}"]`);
+        if (activeTab) {
+          activeTab.classList.add('tab-active');
+        }
+        activeModul = modul;
+        // Close sidebar on mobile
+        if (window.innerWidth <= 768) {
+          const sidebar = document.getElementById('sidebar');
+          const overlay = document.getElementById('sidebarOverlay');
+          sidebar.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.classList.remove('sidebar-open');
+        }
+        switch (modul) {
+          case 'dashboard':
+            dashboardYenile();
+            break;
+          case 'umumiAnbar':
+            umumiAnbarTab(activeUmumiAnbarTab);
+            break;
+          case 'maliyye':
+            maliyyeTab(activeMaliyyeTab);
+            break;
+          case 'satis':
+            satisAxtar();
+            break;
+          case 'satisTarixce':
+            satisTarixceYukle();
+            break;
+          case 'parametrler':
+            magazaMelumatYukle();
+            break;
+        }
+      }
+
+      function umumiAnbarTab(tab) {
+        document.querySelectorAll('.sub-modul-content').forEach((el) => {
+          if (el.parentElement.id === 'modul-umumiAnbar') {
+            el.classList.add('hidden');
+          }
+        });
+        document.querySelectorAll('.sub-tab-button').forEach((btn) => {
+          btn.classList.remove('sub-tab-active');
+        });
+        document.getElementById('umumiAnbar-' + tab).classList.remove('hidden');
+        const activeTab = document.querySelector(`[data-subtab="${tab}"]`);
+        if (activeTab) {
+          activeTab.classList.add('sub-tab-active');
+        }
+        activeUmumiAnbarTab = tab;
+        // Close sidebar on mobile
+        if (window.innerWidth <= 768) {
+          const sidebar = document.getElementById('sidebar');
+          const overlay = document.getElementById('sidebarOverlay');
+          sidebar.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.classList.remove('sidebar-open');
+        }
+        switch (tab) {
+          case 'anbar':
+            anbarYenile();
+            break;
+          case 'daxilolmaTarixce':
+            daxilolmaTarixceYukle();
+            break;
+        }
+      }
+
+      function maliyyeTab(tab) {
+        document.querySelectorAll('.sub-modul-content').forEach((el) => {
+          if (el.parentElement.id === 'modul-maliyye') {
+            el.classList.add('hidden');
+          }
+        });
+        document.querySelectorAll('.sub-tab-button').forEach((btn) => {
+          btn.classList.remove('sub-tab-active');
+        });
+        document.getElementById('maliyye-' + tab).classList.remove('hidden');
+        const activeTab = document.querySelector(`[data-subtab="${tab}"]`);
+        if (activeTab) {
+          activeTab.classList.add('sub-tab-active');
+        }
+        activeMaliyyeTab = tab;
+        // Close sidebar on mobile
+        if (window.innerWidth <= 768) {
+          const sidebar = document.getElementById('sidebar');
+          const overlay = document.getElementById('sidebarOverlay');
+          sidebar.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.classList.remove('sidebar-open');
+        }
+        switch (tab) {
+          case 'umumi':
+            maliyyeYenile();
+            maliyyeFilter();
+            break;
+          case 'xercler':
+            maliyyeYenile();
+            break;
+          case 'zHesabat':
+            zHesabatInit();
+            break;
+        }
+      }
+
+      function dashboardYenile() {
+        const bugun = new Date().toISOString().split('T')[0];
+        const buAy = new Date().toISOString().slice(0, 7);
+        const gunlukSatis = DATA.satislar.filter((s) => s.tarix.startsWith(bugun));
+        const gunlukMebleg = gunlukSatis.reduce((sum, s) => sum + s.yekun_mebleg, 0);
+        document.getElementById('dash-gunluk').textContent = formatMebleg(gunlukMebleg);
+        document.getElementById('dash-gunluk-say').textContent = gunlukSatis.length + ' əməliyyat';
+        const ayliqSatis = DATA.satislar.filter((s) => s.tarix.startsWith(buAy));
+        const ayliqMebleg = ayliqSatis.reduce((sum, s) => sum + s.yekun_mebleg, 0);
+        document.getElementById('dash-ayliq').textContent = formatMebleg(ayliqMebleg);
+        document.getElementById('dash-ayliq-say').textContent = ayliqSatis.length + ' əməliyyat';
+        const ayliqMenfeet = ayliqSatis.reduce((sum, s) => sum + s.menfeet, 0);
+        const ayliqXerc = DATA.xercler
+          .filter((x) => x.tarix.startsWith(buAy))
+          .reduce((sum, x) => sum + x.mebleg, 0);
+        document.getElementById('dash-menfeet').textContent = formatMebleg(
+          ayliqMenfeet - ayliqXerc,
+        );
+        const anbarDeyer = DATA.anbar.reduce((sum, m) => sum + m.qaliq * m.alis_qiymeti, 0);
+        document.getElementById('dash-anbar').textContent = formatMebleg(anbarDeyer);
+        document.getElementById('dash-anbar-say').textContent = DATA.anbar.length + ' məhsul';
+        const stokSifir = DATA.anbar.filter((m) => m.qaliq === 0);
+        const stokAz = DATA.anbar.filter((m) => m.qaliq > 0 && m.qaliq <= 5);
+        let stokHTML = '';
+        if (stokSifir.length === 0 && stokAz.length === 0) {
+          stokHTML =
+            '<p class="text-green-600"><i class="fas fa-check-circle"></i> Stok vəziyyəti normaldır</p>';
+        } else {
+          stokHTML =
+            '<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="px-3 py-2 text-left">Barkod</th><th class="px-3 py-2 text-left">Mal Adı</th><th class="px-3 py-2 text-left">Kateqoriya</th><th class="px-3 py-2 text-right">Qalıq</th><th class="px-3 py-2 text-left">Status</th></tr></thead><tbody>';
+          stokSifir.forEach((m) => {
+            stokHTML += `<tr class="border-b stok-sifir"><td class="px-3 py-2 font-mono text-xs">${m.mal_kod}</td><td class="px-3 py-2">${m.mal_adi}</td><td class="px-3 py-2 text-gray-600">${m.nov_adi || '-'}</td><td class="px-3 py-2 text-right">${m.qaliq}</td><td class="px-3 py-2"><i class="fas fa-times-circle text-red-600"></i> Qurtarıb</td></tr>`;
+          });
+          stokAz.forEach((m) => {
+            stokHTML += `<tr class="border-b stok-az"><td class="px-3 py-2 font-mono text-xs">${m.mal_kod}</td><td class="px-3 py-2">${m.mal_adi}</td><td class="px-3 py-2 text-gray-600">${m.nov_adi || '-'}</td><td class="px-3 py-2 text-right">${m.qaliq}</td><td class="px-3 py-2"><i class="fas fa-exclamation-circle text-yellow-600"></i> Az qalıb</td></tr>`;
+          });
+          stokHTML += '</tbody></table>';
+        }
+        document.getElementById('stok-xeberdar').innerHTML = stokHTML;
+        const sonSatislar = [...DATA.satislar]
+          .sort((a, b) => new Date(b.tarix) - new Date(a.tarix))
+          .slice(0, 10);
+        let satisHTML = '';
+        if (sonSatislar.length === 0) {
+          satisHTML = '<p class="text-gray-500">Hələ satış edilməyib</p>';
+        } else {
+          satisHTML =
+            '<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="px-3 py-2 text-left">Qəbz №</th><th class="px-3 py-2 text-left">Tarix</th><th class="px-3 py-2 text-left">Müştəri</th><th class="px-3 py-2 text-right">Məbləğ</th></tr></thead><tbody>';
+          sonSatislar.forEach((s) => {
+            satisHTML += `<tr class="border-b hover:bg-gray-50">
+      <td class="px-3 py-2">${s.qebz_nomre}</td>
+      <td class="px-3 py-2">${formatTarix(s.tarix)}</td>
+      <td class="px-3 py-2">${s.musteri_ad || '-'}</td>
+      <td class="px-3 py-2 text-right font-semibold">${formatMebleg(s.yekun_mebleg)}</td>
+      </tr>`;
+          });
+          satisHTML += '</tbody></table>';
+        }
+        document.getElementById('son-satislar').innerHTML = satisHTML;
+      }
+
+      function mehsulElave() {
+        const malKod =
+          document.getElementById('yeni-mal-barkod').value.trim() || 'ML-' + Date.now();
+        const malAd = document.getElementById('yeni-mal-ad').value.trim();
+        const novSelect = document.getElementById('yeni-mal-nov');
+        const novValue = novSelect.value;
+        const rengValue = document.getElementById('yeni-mal-reng').value;
+        const olcuValue = document.getElementById('yeni-mal-olcu').value;
+        const miqdarValue = document.getElementById('yeni-mal-miqdar').value;
+        const alisValue = document.getElementById('yeni-mal-alis').value;
+        const satisValue = document.getElementById('yeni-mal-satis').value;
+
+        // Check each field individually
+        const errors = [];
+        if (!malAd) errors.push('Malın adı');
+        if (!novValue) errors.push('Növ');
+        if (!olcuValue) errors.push('Ölçü');
+        if (!miqdarValue) errors.push('Miqdar');
+        if (!alisValue) errors.push('Alış qiyməti');
+        if (!satisValue) errors.push('Satış qiyməti');
+
+        if (errors.length > 0) {
+          alert('Zəhmət olmasa bu xanaları doldurun:\n' + errors.join(', '));
+          return;
+        }
+
+        const novId = parseInt(novValue);
+        const rengId = rengValue ? parseInt(rengValue) : null;
+        const olcuId = parseInt(olcuValue);
+        const miqdar = parseInt(miqdarValue);
+        const alis = parseFloat(alisValue);
+        const satis = parseFloat(satisValue);
+
+        if (!novValue || isNaN(novId)) {
+          alert('Növ düzgün seçilməyib!');
+          return;
+        }
+        if (!olcuValue || isNaN(olcuId)) {
+          alert('Ölçü düzgün seçilməyib!');
+          return;
+        }
+        if (isNaN(miqdar) || miqdar <= 0) {
+          alert('Miqdar düzgün daxil edilməyib!');
+          return;
+        }
+        if (isNaN(alis) || alis <= 0) {
+          alert('Alış qiyməti düzgün daxil edilməyib!');
+          return;
+        }
+        if (isNaN(satis) || satis <= 0) {
+          alert('Satış qiyməti düzgün daxil edilməyib!');
+          return;
+        }
+
+        const nov = DATA.kateqoriyalar.find((k) => k.id === novId);
+        const reng = rengId ? DATA.rengler.find((r) => r.id === rengId) : null;
+        const olcu = DATA.olculer.find((o) => o.id === olcuId);
+
+        if (!nov) {
+          alert('Seçilmiş növ tapılmadı! ID: ' + novId);
+          return;
+        }
+        if (!olcu) {
+          alert('Seçilmiş ölçü tapılmadı!');
+          return;
+        }
+
+        yeniMehsullar.push({
+          mal_kod: malKod,
+          mal_adi: malAd,
+          nov_id: novId,
+          nov_adi: nov.nov_adi,
+          reng_id: rengId,
+          reng_adi: reng ? reng.ad : '',
+          reng_kod: reng ? reng.kod : '',
+          olcu_id: olcuId,
+          olcu_adi: olcu.ad,
+          miqdar: miqdar,
+          alis_qiymeti: alis,
+          satis_qiymeti: satis,
+        });
+        document.getElementById('yeni-mal-barkod').value = '';
+        document.getElementById('yeni-mal-ad').value = '';
+        document.getElementById('yeni-mal-nov').value = '';
+        document.getElementById('yeni-mal-reng').value = '';
+        document.getElementById('yeni-mal-olcu').value = '';
+        document.getElementById('yeni-mal-miqdar').value = '';
+        document.getElementById('yeni-mal-alis').value = '';
+        document.getElementById('yeni-mal-satis').value = '';
+        mehsulCedveliYenile();
+      }
+
+      function mehsulCedveliYenile() {
+        if (yeniMehsullar.length === 0) {
+          document.getElementById('mehsul-cedvel-container').classList.add('hidden');
+          return;
+        }
+        document.getElementById('mehsul-cedvel-container').classList.remove('hidden');
+        let html = '';
+        let umumi = 0;
+        yeniMehsullar.forEach((m, index) => {
+          const cemi = m.miqdar * m.alis_qiymeti;
+          umumi += cemi;
+          const rengDisplay = m.reng_kod
+            ? `<span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded border" style="background-color: ${m.reng_kod};"></span>${m.reng_adi}</span>`
+            : '<span class="text-gray-400">-</span>';
+          html += `<tr class="border-b hover:bg-gray-50">
+      <td class="px-4 py-3">${m.mal_kod}</td>
+      <td class="px-4 py-3">${m.mal_adi}</td>
+      <td class="px-4 py-3">${m.nov_adi}</td>
+      <td class="px-4 py-3">${rengDisplay}</td>
+      <td class="px-4 py-3">${m.olcu_adi}</td>
+      <td class="px-4 py-3 text-right">${m.miqdar}</td>
+      <td class="px-4 py-3 text-right">${formatMebleg(m.alis_qiymeti)}</td>
+      <td class="px-4 py-3 text-right">${formatMebleg(m.satis_qiymeti)}</td>
+      <td class="px-4 py-3 text-right font-semibold">${formatMebleg(cemi)}</td>
+      <td class="px-4 py-3 text-center">
+      <button onclick="mehsulSil(${index})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+      </td>
+      </tr>`;
+        });
+        document.getElementById('mehsul-tbody').innerHTML = html;
+        document.getElementById('umumi-mebleg').textContent = formatMebleg(umumi);
+      }
+
+      function mehsulSil(index) {
+        yeniMehsullar.splice(index, 1);
+        mehsulCedveliYenile();
+      }
+
+      function qaimeyiSaxla() {
+        const qaimeKod = document.getElementById('qaime-kod').value.trim();
+        if (!qaimeKod || yeniMehsullar.length === 0) {
+          alert('Qaimə kodu və ən azı bir məhsul tələb olunur!');
+          return;
+        }
+        const qaime = {
+          id: Date.now(),
+          qaime_kod: qaimeKod,
+          techizatci_id: document.getElementById('qaime-techizatci').value,
+          tarix: document.getElementById('qaime-tarix').value,
+          mehsullar: [...yeniMehsullar],
+        };
+        DATA.qaimeler.push(qaime);
+        yeniMehsullar.forEach((m) => {
+          const mevcud = DATA.anbar.find(
+            (a) => a.mal_kod === m.mal_kod && a.reng_id === m.reng_id && a.olcu_id === m.olcu_id,
+          );
+          if (mevcud) {
+            mevcud.qaliq += m.miqdar;
+            mevcud.alis_qiymeti = m.alis_qiymeti;
+            mevcud.satis_qiymeti = m.satis_qiymeti;
+          } else {
+            DATA.anbar.push({
+              id: Date.now() + Math.random(),
+              mal_kod: m.mal_kod,
+              mal_adi: m.mal_adi,
+              nov_id: m.nov_id,
+              nov_adi: m.nov_adi,
+              reng_id: m.reng_id || null,
+              reng_adi: m.reng_adi || '',
+              reng_kod: m.reng_kod || '',
+              olcu_id: m.olcu_id,
+              olcu_adi: m.olcu_adi,
+              qaliq: m.miqdar,
+              alis_qiymeti: m.alis_qiymeti,
+              satis_qiymeti: m.satis_qiymeti,
+            });
+          }
+        });
+        saveData();
+        alert('<i class="fas fa-check-circle"></i> Qaimə uğurla saxlanıldı!');
+        document.getElementById('qaime-kod').value = '';
+        document.getElementById('qaime-techizatci').value = '';
+        yeniMehsullar = [];
+        mehsulCedveliYenile();
+      }
+
+      function anbarYenile() {
+        const axtar = document.getElementById('anbar-axtar').value.toLowerCase();
+        const novFilter = document.getElementById('anbar-nov-filter').value;
+        const sifirGoster = document.getElementById('anbar-sifir').checked;
+        let filtered = DATA.anbar.filter((m) => {
+          const axtarMatch =
+            m.mal_adi.toLowerCase().includes(axtar) || m.mal_kod.toLowerCase().includes(axtar);
+          const novMatch = !novFilter || m.nov_id == novFilter;
+          const sifirMatch = sifirGoster || m.qaliq > 0;
+          return axtarMatch && novMatch && sifirMatch;
+        });
+        let html = '';
+        if (filtered.length === 0) {
+          html =
+            '<tr><td colspan="10" class="px-4 py-8 text-center text-gray-500">Məhsul tapılmadı</td></tr>';
+        } else {
+          filtered.forEach((m) => {
+            const umumiDeyer = m.qaliq * m.alis_qiymeti;
+            const rowClass = m.qaliq === 0 ? 'stok-sifir' : m.qaliq <= 5 ? 'stok-az' : '';
+            const rengDisplay = m.reng_kod
+              ? `<span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded border" style="background-color: ${m.reng_kod};"></span>${m.reng_adi}</span>`
+              : '<span class="text-gray-400">-</span>';
+            html += `<tr class="border-b hover:bg-gray-50 ${rowClass} cursor-pointer" onclick="anbarDetayGoster(${m.id})">
+      <td class="px-4 py-3">${m.mal_kod}</td>
+      <td class="px-4 py-3 font-medium">${m.mal_adi}</td>
+      <td class="px-4 py-3">${m.nov_adi}</td>
+      <td class="px-4 py-3">${rengDisplay}</td>
+      <td class="px-4 py-3">${m.olcu_adi || '-'}</td>
+      <td class="px-4 py-3 text-right font-semibold">${m.qaliq}</td>
+      <td class="px-4 py-3 text-right">${formatMebleg(m.alis_qiymeti)}</td>
+      <td class="px-4 py-3 text-right">${formatMebleg(m.satis_qiymeti)}</td>
+      <td class="px-4 py-3 text-right font-bold">${formatMebleg(umumiDeyer)}</td>
+      <td class="px-4 py-3 text-center">
+      <button onclick="event.stopPropagation(); anbarDetayGoster(${m.id})" class="text-blue-600 hover:text-blue-800" title="Qaimə məlumatları">
+      <i class="fas fa-file-invoice"></i>
+      </button>
+      ${m.qaliq === 0 ? `<button onclick="event.stopPropagation(); anbarSil(${m.id})" class="text-red-600 hover:text-red-800 ml-2"><i class="fas fa-trash"></i></button>` : ''}
+      </td>
+      </tr>`;
+          });
+        }
+        document.getElementById('anbar-tbody').innerHTML = html;
+      }
+
+      function anbarDetayGoster(malId) {
+        const mal = DATA.anbar.find((m) => m.id === malId);
+        if (!mal) return;
+
+        // Find all invoices (qaimeler) that contain this product
+        const qaimeDetallari = [];
+        DATA.qaimeler.forEach((qaime) => {
+          qaime.mehsullar.forEach((mehsul) => {
+            if (
+              mehsul.mal_kod === mal.mal_kod &&
+              mehsul.reng_id === mal.reng_id &&
+              mehsul.olcu_id === mal.olcu_id
+            ) {
+              qaimeDetallari.push({
+                qaime_kod: qaime.qaime_kod,
+                tarix: qaime.tarix,
+                techizatci_id: qaime.techizatci_id,
+                miqdar: mehsul.miqdar,
+                alis_qiymeti: mehsul.alis_qiymeti,
+                satis_qiymeti: mehsul.satis_qiymeti,
+                umumi_mebleg: mehsul.miqdar * mehsul.alis_qiymeti,
+              });
+            }
+          });
+        });
+
+        // Get supplier name
+        const techizatci =
+          qaimeDetallari.length > 0 && qaimeDetallari[0].techizatci_id
+            ? DATA.techizatcilar.find((t) => t.id == qaimeDetallari[0].techizatci_id)
+            : null;
+
+        let html = `
+      <div class="mb-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 class="font-bold text-lg mb-2"><i class="fas fa-box"></i> Məhsul Məlumatları</h4>
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div><span class="text-gray-600">Barkod:</span> <span class="font-semibold">${mal.mal_kod}</span></div>
+            <div><span class="text-gray-600">Adı:</span> <span class="font-semibold">${mal.mal_adi}</span></div>
+            <div><span class="text-gray-600">Kateqoriya:</span> <span class="font-semibold">${mal.nov_adi}</span></div>
+            <div><span class="text-gray-600">Rəng:</span> <span class="font-semibold">${mal.reng_adi || '-'}</span></div>
+            <div><span class="text-gray-600">Ölçü:</span> <span class="font-semibold">${mal.olcu_adi || '-'}</span></div>
+            <div><span class="text-gray-600">Anbarda Qalıq:</span> <span class="font-semibold text-blue-600">${mal.qaliq}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-bold text-lg mb-3"><i class="fas fa-file-invoice"></i> Qaimə Məlumatları (Daxilolma Tarixçəsi)</h4>
+      `;
+
+        if (qaimeDetallari.length === 0) {
+          html += `<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                  <p class="text-yellow-800"><i class="fas fa-exclamation-triangle"></i> Bu məhsul üçün qaimə məlumatı tapılmadı.</p>
+                </div>`;
+        } else {
+          html += `<div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                      <tr>
+                        <th class="px-4 py-3 text-left">Qaimə Kodu</th>
+                        <th class="px-4 py-3 text-left">Tarix</th>
+                        <th class="px-4 py-3 text-left">Təchizatçı</th>
+                        <th class="px-4 py-3 text-right">Miqdar</th>
+                        <th class="px-4 py-3 text-right">Alış Qiyməti</th>
+                        <th class="px-4 py-3 text-right">Satış Qiyməti</th>
+                        <th class="px-4 py-3 text-right">Ümumi Məbləğ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+      `;
+          qaimeDetallari.forEach((q) => {
+            const techizatciAd = q.techizatci_id
+              ? DATA.techizatcilar.find((t) => t.id == q.techizatci_id)?.ad || '-'
+              : '-';
+            html += `<tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium">${q.qaime_kod}</td>
+                    <td class="px-4 py-3">${formatTarix(q.tarix)}</td>
+                    <td class="px-4 py-3">${techizatciAd}</td>
+                    <td class="px-4 py-3 text-right">${q.miqdar}</td>
+                    <td class="px-4 py-3 text-right text-blue-600">${formatMebleg(q.alis_qiymeti)}</td>
+                    <td class="px-4 py-3 text-right text-green-600">${formatMebleg(q.satis_qiymeti)}</td>
+                    <td class="px-4 py-3 text-right font-bold">${formatMebleg(q.umumi_mebleg)}</td>
+                  </tr>`;
+          });
+          html += `</tbody>
+                  </table>
+                </div>`;
+        }
+
+        html += `</div>
+      <div class="flex justify-end mt-6">
+        <button onclick="modalBagla('modal-anbar-detay')" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
+          <i class="fas fa-times"></i> Bağla
+        </button>
+      </div>`;
+
+        document.getElementById('anbar-detay-content').innerHTML = html;
+        document.getElementById('modal-anbar-detay').classList.remove('hidden');
+      }
+
+      function anbarSil(id) {
+        if (!confirm('Bu məhsulu silmək istədiyinizdən əminsiniz?')) return;
+        DATA.anbar = DATA.anbar.filter((m) => m.id !== id);
+        saveData();
+        anbarYenile();
+      }
+
+      function anbarExportExcel() {
+        const ws_data = [
+          [
+            'Mal Kodu',
+            'Malın Adı',
+            'Kateqoriya',
+            'Rəng',
+            'Ölçü',
+            'Qalıq Miqdarı',
+            'Alış Qiyməti',
+            'Satış Qiyməti',
+            'Ümumi Dəyər',
+          ],
+        ];
+        DATA.anbar.forEach((m) => {
+          ws_data.push([
+            m.mal_kod,
+            m.mal_adi,
+            m.nov_adi,
+            m.reng_adi || '-',
+            m.olcu_adi || '-',
+            m.qaliq,
+            m.alis_qiymeti,
+            m.satis_qiymeti,
+            m.qaliq * m.alis_qiymeti,
+          ]);
+        });
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, 'Anbar');
+        XLSX.writeFile(wb, `anbar_${new Date().toISOString().split('T')[0]}.xlsx`);
+      }
+
+      function satisAxtar() {
+        const axtar = document.getElementById('satis-axtar').value.toLowerCase();
+        const filtered = DATA.anbar.filter(
+          (m) =>
+            m.qaliq > 0 &&
+            (m.mal_adi.toLowerCase().includes(axtar) || m.mal_kod.toLowerCase().includes(axtar)),
+        );
+        let html = '';
+        if (filtered.length === 0) {
+          html = '<p class="text-gray-500 text-center py-4">Məhsul tapılmadı</p>';
+        } else {
+          filtered.forEach((m) => {
+            const rengDisplay = m.reng_kod
+              ? `<span class="inline-block w-4 h-4 rounded border align-middle" style="background-color: ${m.reng_kod};"></span> ${m.reng_adi}`
+              : '';
+            const olcuText = m.olcu_adi ? ' • ' + m.olcu_adi : '';
+            const colorSizeText = rengDisplay || olcuText ? ` • ${rengDisplay}${olcuText}` : '';
+            html += `<div class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onclick="sebeteElave(${m.id})">
+      <div class="flex justify-between items-start">
+      <div>
+      <h4 class="font-semibold">${m.mal_adi}</h4>
+      <p class="text-sm text-gray-600">${m.mal_kod} • ${m.nov_adi}${colorSizeText}</p>
+      </div>
+      <div class="text-right">
+      <p class="font-bold text-blue-600">${formatMebleg(m.satis_qiymeti)}</p>
+      <p class="text-xs text-gray-600">Qalıq: ${m.qaliq}</p>
+      </div>
+      </div>
+      </div>`;
+          });
+        }
+        document.getElementById('satis-mehsul-list').innerHTML = html;
+      }
+
+      function sebeteElave(malId) {
+        const mal = DATA.anbar.find((m) => m.id === malId);
+        if (!mal) return;
+        // Məhsulun eyni rəng, ölçü və qiymətdə kartda olub-olmadığını yoxla
+        const sebetdeMal = DATA.sebet.find(
+          (s) =>
+            s.mal_id === malId &&
+            s.reng_id === mal.reng_id &&
+            s.olcu_id === mal.olcu_id &&
+            s.satis_qiymeti === mal.satis_qiymeti,
+        );
+        if (sebetdeMal) {
+          if (sebetdeMal.miqdar >= mal.qaliq) {
+            alert('Anbarda kifayət qədər mal yoxdur!');
+            return;
+          }
+          sebetdeMal.miqdar++;
+        } else {
+          DATA.sebet.push({
+            mal_id: malId,
+            mal_adi: mal.mal_adi,
+            mal_kod: mal.mal_kod,
+            nov_id: mal.nov_id,
+            nov_adi: mal.nov_adi,
+            reng_id: mal.reng_id || null,
+            reng_adi: mal.reng_adi || '',
+            reng_kod: mal.reng_kod || '',
+            olcu_id: mal.olcu_id,
+            olcu_adi: mal.olcu_adi,
+            miqdar: 1,
+            alis_qiymeti: mal.alis_qiymeti,
+            satis_qiymeti: mal.satis_qiymeti,
+            max_qaliq: mal.qaliq,
+            endirim_tipi: null,
+            endirim_deyer: 0,
+          });
+        }
+        sebetiYenile();
+      }
+
+      function sebetiYenile() {
+        if (DATA.sebet.length === 0) {
+          document.getElementById('sebet-items').innerHTML =
+            '<p class="text-gray-500 text-center py-8">Səbət boşdur</p>';
+          document.getElementById('satis-btn').disabled = true;
+          sebetHesabla();
+          return;
+        }
+        document.getElementById('satis-btn').disabled = false;
+        let html = '';
+        DATA.sebet.forEach((item, index) => {
+          const araCemi = item.miqdar * item.satis_qiymeti;
+          let endirimMebleg = 0;
+          if (item.endirim_tipi === 'faiz') {
+            endirimMebleg = araCemi * (item.endirim_deyer / 100);
+          } else if (item.endirim_tipi === 'mebleg') {
+            endirimMebleg = item.endirim_deyer;
+          }
+          const yekun = araCemi - endirimMebleg;
+          const rengDisplay = item.reng_kod
+            ? `<span class="inline-block w-3 h-3 rounded border align-middle" style="background-color: ${item.reng_kod};"></span> ${item.reng_adi}`
+            : '';
+          const olcuText = item.olcu_adi ? ' • ' + item.olcu_adi : '';
+          const novText = item.nov_adi ? ` | ${item.nov_adi}` : '';
+          const colorSizeText = rengDisplay || olcuText ? ` • ${rengDisplay}${olcuText}` : '';
+          html += `<div class="border rounded-lg p-3 mb-2 bg-gray-50">
+      <div class="flex justify-between items-start mb-2">
+      <div class="flex-1">
+      <h5 class="font-semibold text-sm">${item.mal_adi}</h5>
+      <p class="text-xs text-gray-600">${item.mal_kod}${novText}${colorSizeText}</p>
+      <p class="text-xs text-blue-600 font-semibold">${formatMebleg(item.satis_qiymeti)}</p>
+      </div>
+      <button onclick="sebetdenCixar(${index})" class="text-red-600 hover:text-red-800"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="flex items-center gap-2 mb-2">
+      <button onclick="miqdarAzalt(${index})" class="bg-gray-300 w-6 h-6 rounded text-sm">-</button>
+      <input type="number" value="${item.miqdar}" min="1" max="${item.max_qaliq}"
+      onchange="miqdarDeyis(${index}, this.value)"
+      class="w-12 text-center border rounded py-1">
+      <button onclick="miqdarArtir(${index})" class="bg-gray-300 w-6 h-6 rounded text-sm">+</button>
+      <span class="text-xs text-gray-600">x ${formatMebleg(item.satis_qiymeti)}</span>
+      </div>
+      <div class="border-t pt-2 mt-2">
+      <div class="flex gap-2 mb-2">
+      <select onchange="endirimTipiDeyis(${index}, this.value)" class="text-xs border rounded px-2 py-1">
+      <option value="">Endirim yoxdur</option>
+      <option value="faiz" ${item.endirim_tipi === 'faiz' ? 'selected' : ''}>% Endirim</option>
+      <option value="mebleg" ${item.endirim_tipi === 'mebleg' ? 'selected' : ''}>₼ Endirim</option>
+      </select>
+      ${
+        item.endirim_tipi
+          ? `
+      <input type="number" value="${item.endirim_deyer}" min="0" step="0.01"
+      onchange="endirimDeyerDeyis(${index}, this.value)"
+      class="text-xs border rounded px-2 py-1 w-20">
+      `
+          : ''
+      }
+      </div>
+      ${endirimMebleg > 0 ? `<p class="text-xs text-red-600">Endirim: -${formatMebleg(endirimMebleg)}</p>` : ''}
+      <p class="text-sm font-bold mt-1">Yekun: ${formatMebleg(yekun)}</p>
+      </div>
+      </div>`;
+        });
+        document.getElementById('sebet-items').innerHTML = html;
+        sebetHesabla();
+      }
+
+      function sebetHesabla() {
+        let araCemi = 0,
+          umumiEndirim = 0;
+        DATA.sebet.forEach((item) => {
+          const itemCemi = item.miqdar * item.satis_qiymeti;
+          araCemi += itemCemi;
+          let endirimMebleg = 0;
+          if (item.endirim_tipi === 'faiz') {
+            endirimMebleg = itemCemi * (item.endirim_deyer / 100);
+          } else if (item.endirim_tipi === 'mebleg') {
+            endirimMebleg = item.endirim_deyer;
+          }
+          umumiEndirim += endirimMebleg;
+        });
+        // Ümumi qəbz endirimi
+        let umumiQebzEndirim = 0;
+        if (DATA.umumiEndirim.tipi === 'faiz') {
+          umumiQebzEndirim = araCemi * (DATA.umumiEndirim.deyer / 100);
+        } else if (DATA.umumiEndirim.tipi === 'mebleg') {
+          umumiQebzEndirim = DATA.umumiEndirim.deyer;
+        }
+        const toplamEndirim = umumiEndirim + umumiQebzEndirim;
+        const yekun = araCemi - toplamEndirim;
+        document.getElementById('sebet-ara-cemi').textContent = formatMebleg(araCemi);
+        document.getElementById('sebet-endirim').textContent = formatMebleg(toplamEndirim);
+        document.getElementById('sebet-yekun').textContent = formatMebleg(yekun);
+      }
+
+      function sebetdenCixar(index) {
+        DATA.sebet.splice(index, 1);
+        sebetiYenile();
+      }
+      function miqdarAzalt(index) {
+        if (DATA.sebet[index].miqdar > 1) {
+          DATA.sebet[index].miqdar--;
+          sebetiYenile();
+        }
+      }
+      function miqdarArtir(index) {
+        if (DATA.sebet[index].miqdar < DATA.sebet[index].max_qaliq) {
+          DATA.sebet[index].miqdar++;
+          sebetiYenile();
+        }
+      }
+      function miqdarDeyis(index, value) {
+        const val = parseInt(value);
+        if (val > 0 && val <= DATA.sebet[index].max_qaliq) {
+          DATA.sebet[index].miqdar = val;
+          sebetiYenile();
+        }
+      }
+      function endirimTipiDeyis(index, tipi) {
+        DATA.sebet[index].endirim_tipi = tipi || null;
+        DATA.sebet[index].endirim_deyer = 0;
+        sebetiYenile();
+      }
+      function endirimDeyerDeyis(index, deyer) {
+        DATA.sebet[index].endirim_deyer = parseFloat(deyer) || 0;
+        sebetiYenile();
+      }
+      function umumiEndirimTipiDeyis() {
+        const tipi = document.getElementById('umumi-endirim-tipi').value;
+        const deyerInput = document.getElementById('umumi-endirim-deyer');
+        if (tipi) {
+          deyerInput.disabled = false;
+          DATA.umumiEndirim.tipi = tipi;
+        } else {
+          deyerInput.disabled = true;
+          deyerInput.value = '';
+          DATA.umumiEndirim.tipi = null;
+          DATA.umumiEndirim.deyer = 0;
+        }
+        sebetHesabla();
+      }
+      function umumiEndirimDeyerDeyis() {
+        const deyer = parseFloat(document.getElementById('umumi-endirim-deyer').value) || 0;
+        DATA.umumiEndirim.deyer = deyer;
+        sebetHesabla();
+      }
+
+      function satisiTamamla() {
+        if (DATA.sebet.length === 0) {
+          alert('Səbət boşdur!');
+          return;
+        }
+        const qebzNomre = 'QBZ-' + String(DATA.satislar.length + 1).padStart(6, '0');
+        let umumiMebleg = 0,
+          mehsulEndirim = 0,
+          umumiMenfeet = 0;
+        const mehsullar = DATA.sebet.map((item) => {
+          const araCemi = item.miqdar * item.satis_qiymeti;
+          let endirimMebleg = 0;
+          if (item.endirim_tipi === 'faiz') {
+            endirimMebleg = araCemi * (item.endirim_deyer / 100);
+          } else if (item.endirim_tipi === 'mebleg') {
+            endirimMebleg = item.endirim_deyer;
+          }
+          umumiMebleg += araCemi;
+          mehsulEndirim += endirimMebleg;
+          return {
+            mal_id: item.mal_id,
+            mal_adi: item.mal_adi,
+            mal_kod: item.mal_kod,
+            nov_id: item.nov_id,
+            nov_adi: item.nov_adi,
+            reng_id: item.reng_id || null,
+            reng_adi: item.reng_adi || '',
+            reng_kod: item.reng_kod || '',
+            olcu_id: item.olcu_id,
+            olcu_adi: item.olcu_adi,
+            miqdar: item.miqdar,
+            alis_qiymeti: item.alis_qiymeti,
+            satis_qiymeti: item.satis_qiymeti,
+            endirim_tipi: item.endirim_tipi,
+            endirim_deyer: item.endirim_deyer,
+            endirim_mebleg: endirimMebleg,
+            ara_cemi: araCemi,
+            yekun_mebleg: araCemi - endirimMebleg,
+          };
+        });
+        //  Ümumi qəbz endirimi
+        let umumiQebzEndirim = 0;
+        if (DATA.umumiEndirim.tipi === 'faiz') {
+          umumiQebzEndirim = umumiMebleg * (DATA.umumiEndirim.deyer / 100);
+        } else if (DATA.umumiEndirim.tipi === 'mebleg') {
+          umumiQebzEndirim = DATA.umumiEndirim.deyer;
+        }
+        const toplamEndirim = mehsulEndirim + umumiQebzEndirim;
+        const yekunMebleg = umumiMebleg - toplamEndirim;
+        // Mənfəət hesabla
+        mehsullar.forEach((m) => {
+          const mHisse = m.yekun_mebleg / (umumiMebleg - mehsulEndirim) || 0;
+          const mQebzEndirim = umumiQebzEndirim * mHisse;
+          m.yekun_mebleg_son = m.yekun_mebleg - mQebzEndirim;
+          m.menfeet = m.yekun_mebleg_son - m.miqdar * m.alis_qiymeti;
+          umumiMenfeet += m.menfeet;
+        });
+        const satis = {
+          id: Date.now(),
+          qebz_nomre: qebzNomre,
+          tarix: new Date().toISOString(),
+          musteri_ad: document.getElementById('musteri-ad').value.trim(),
+          musteri_tel: document.getElementById('musteri-tel').value.trim(),
+          odenis_nov: document.getElementById('odenis-nov').value,
+          umumi_mebleg: umumiMebleg,
+          mehsul_endirim: mehsulEndirim,
+          qebz_endirim: umumiQebzEndirim,
+          qebz_endirim_tipi: DATA.umumiEndirim.tipi,
+          qebz_endirim_deyer: DATA.umumiEndirim.deyer,
+          umumi_endirim: toplamEndirim,
+          yekun_mebleg: yekunMebleg,
+          menfeet: umumiMenfeet,
+          mehsullar: mehsullar,
+        };
+        DATA.satislar.push(satis);
+        mehsullar.forEach((m) => {
+          const anbarMal = DATA.anbar.find((a) => a.id === m.mal_id);
+          if (anbarMal) anbarMal.qaliq -= m.miqdar;
+        });
+        saveData();
+        qebzGoster(satis);
+        DATA.sebet = [];
+        DATA.umumiEndirim = { tipi: null, deyer: 0 };
+        document.getElementById('musteri-ad').value = '';
+        document.getElementById('musteri-tel').value = '';
+        document.getElementById('umumi-endirim-tipi').value = '';
+        document.getElementById('umumi-endirim-deyer').value = '';
+        document.getElementById('umumi-endirim-deyer').disabled = true;
+        sebetiYenile();
+        satisAxtar();
+      }
+
+      function qebzGoster(satis) {
+        const qaytarilanMebleg = satis.qaytarmalar
+          ? satis.qaytarmalar.reduce((sum, q) => sum + q.toplam_mebleg, 0)
+          : 0;
+        const ilkinYekun = satis.yekun_mebleg + qaytarilanMebleg;
+        let html = `<div class="text-center mb-4">
+      <h2 class="text-xl font-bold">${DATA.magazaMelumat.ad}</h2>
+      <p class="text-sm text-gray-600">${DATA.magazaMelumat.unvan}</p>
+      <p class="text-sm text-gray-600">Tel: ${DATA.magazaMelumat.telefon}</p>
+      </div>
+      <div class="border-t border-b py-3 mb-3">
+      <p class="text-sm"><strong>Qəbz №:</strong> ${satis.qebz_nomre}</p>
+      <p class="text-sm"><strong>Tarix:</strong> ${formatTarix(satis.tarix, true)}</p>
+      ${satis.musteri_ad ? `<p class="text-sm"><strong>Müştəri:</strong> ${satis.musteri_ad}</p>` : ''}
+      ${qaytarilanMebleg > 0 ? `<p class="text-sm text-red-600"><strong><i class="fas fa-exclamation-triangle"></i> QAYTARMALARDAKİ QƏBZ</strong></p>` : ''}
+      </div>
+      <table class="w-full text-sm mb-3">
+      <thead class="border-b"><tr><th class="text-left py-1">Məhsul</th><th class="text-right py-1">Qiymət</th></tr></thead>
+      <tbody>`;
+        satis.mehsullar.forEach((m) => {
+          const rengDisplay = m.reng_kod
+            ? `<span class="inline-block w-3 h-3 rounded border align-middle ml-1" style="background-color: ${m.reng_kod};"></span> ${m.reng_adi}`
+            : '';
+          const olcuText = m.olcu_adi ? ` (${m.olcu_adi})` : '';
+          const novText = m.nov_adi ? ` | ${m.nov_adi}` : '';
+          const colorSizeText = rengDisplay || olcuText ? ` -${rengDisplay}${olcuText}` : '';
+          html += `<tr class="border-b">
+      <td class="py-2">${m.mal_adi}<span class="text-xs text-gray-600">${novText}${colorSizeText}</span><br><span class="text-xs text-gray-600">${m.miqdar} x ${formatMebleg(m.satis_qiymeti)}</span>
+      ${m.endirim_mebleg > 0 ? `<br><span class="text-xs text-red-600">Məhsul endirimi: -${formatMebleg(m.endirim_mebleg)}</span>` : ''}</td>
+      <td class="text-right py-2 font-semibold">${formatMebleg(m.yekun_mebleg)}</td>
+      </tr>`;
+        });
+        html += `</tbody></table>
+      <div class="border-t pt-3 space-y-1">`;
+        if (qaytarilanMebleg > 0) {
+          html += `<div class="flex justify-between text-sm"><span>İlkin Məbləğ:</span><span>${formatMebleg(ilkinYekun)}</span></div>`;
+        } else {
+          html += `<div class="flex justify-between text-sm"><span>Ara Cəmi:</span><span>${formatMebleg(satis.umumi_mebleg)}</span></div>`;
+        }
+        if (satis.mehsul_endirim > 0) {
+          html += `<div class="flex justify-between text-sm text-red-600"><span>Məhsul Endirimi:</span><span>-${formatMebleg(satis.mehsul_endirim)}</span></div>`;
+        }
+        if (satis.qebz_endirim > 0) {
+          const endirimText =
+            satis.qebz_endirim_tipi === 'faiz'
+              ? `${satis.qebz_endirim_deyer}% Qəbz Endirimi`
+              : 'Qəbz Endirimi';
+          html += `<div class="flex justify-between text-sm text-red-600"><span>${endirimText}:</span><span>-${formatMebleg(satis.qebz_endirim)}</span></div>`;
+        }
+        // Qaytarma məlumatları
+        if (satis.qaytarmalar && satis.qaytarmalar.length > 0) {
+          html += `<div class="border-t border-red-300 pt-2 mt-2">
+      <p class="text-xs font-semibold text-red-600 mb-1">QAYTARILMIŞ MƏHSULLAR:</p>`;
+          satis.qaytarmalar.forEach((q, qIndex) => {
+            html += `<div class="text-xs text-red-600 mb-1">
+      <span class="font-semibold">#${qIndex + 1} - ${formatTarix(q.tarix, true)}</span>`;
+            q.mehsullar.forEach((m) => {
+              html += `<br>↩️ ${m.mal_adi} (${m.miqdar} ədəd) - ${formatMebleg(m.mebleg)}`;
+              if (m.sebeb) {
+                html += `<br><span class="text-gray-600">   Səbəb: ${m.sebeb}</span>`;
+              }
+            });
+            html += `</div>`;
+          });
+          html += `<div class="flex justify-between text-sm text-red-600 font-semibold border-t border-red-300 pt-1">
+      <span>Qaytarılan Məbləğ:</span>
+      <span>-${formatMebleg(qaytarilanMebleg)}</span>
+      </div></div>`;
+        }
+        html += `<div class="flex justify-between text-lg font-bold border-t pt-2"><span>YEKUN:</span><span>${formatMebleg(satis.yekun_mebleg)}</span></div>
+      <div class="flex justify-between text-sm"><span>Ödəniş:</span><span>${satis.odenis_nov}</span></div>
+      </div>
+      <div class="text-center mt-4 pt-4 border-t"><p class="text-sm">Təşəkkür edirik!</p></div>`;
+        document.getElementById('qebz-content').innerHTML = html;
+        document.getElementById('modal-qebz').classList.remove('hidden');
+      }
+
+      function qebzCap() {
+        window.print();
+      }
+
+      function satisTarixceYukle() {
+        satisTarixceFilter();
+      }
+      function satisTarixceFilter() {
+        const baslama = document.getElementById('tarixce-baslama').value;
+        const bitme = document.getElementById('tarixce-bitme').value;
+        let filtered = [...DATA.satislar];
+        if (baslama) filtered = filtered.filter((s) => s.tarix >= baslama);
+        if (bitme) filtered = filtered.filter((s) => s.tarix <= bitme + 'T23:59:59');
+        filtered.sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
+        let html = '';
+        if (filtered.length === 0) {
+          html =
+            '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Satış tapılmadı</td></tr>';
+        } else {
+          filtered.forEach((s) => {
+            const varQaytarma = s.qaytarmalar && s.qaytarmalar.length > 0;
+            const rowClass = varQaytarma ? 'bg-red-50' : '';
+            const qebzIcon = varQaytarma ? '<i class="fas fa-undo"></i> ' : '';
+            html += `<tr class="border-b hover:bg-gray-50 ${rowClass}">
+      <td class="px-4 py-3">${qebzIcon}${s.qebz_nomre}</td>
+      <td class="px-4 py-3">${formatTarix(s.tarix)}</td>
+      <td class="px-4 py-3">${s.musteri_ad || '-'}</td>
+      <td class="px-4 py-3 text-right">${formatMebleg(s.umumi_mebleg)}</td>
+      <td class="px-4 py-3 text-right text-red-600">${formatMebleg(s.umumi_endirim)}</td>
+      <td class="px-4 py-3 text-right font-bold text-blue-600">${formatMebleg(s.yekun_mebleg)}</td>
+      <td class="px-4 py-3">${s.odenis_nov}</td>
+      <td class="px-4 py-3 text-center">
+      <button onclick="satisDetayGoster(${s.id})" class="text-blue-600 hover:text-blue-800" title="Detallar"><i class="fas fa-eye"></i></button>
+      <button onclick="qebzGosterById(${s.id})" class="text-green-600 hover:text-green-800 ml-2" title="Qəbz"><i class="fas fa-print"></i></button>
+      <button onclick="qaytarmaBaslat(${s.id})" class="text-red-600 hover:text-red-800 ml-2" title="Qaytarma"><i class="fas fa-undo"></i></button>
+      </td>
+      </tr>`;
+          });
+        }
+        document.getElementById('tarixce-tbody').innerHTML = html;
+      }
+
+      function satisDetayGoster(id) {
+        const satis = DATA.satislar.find((s) => s.id === id);
+        if (!satis) return;
+        // Qaytarılmış ümumi məbləğ
+        const qaytarilanMebleg = satis.qaytarmalar
+          ? satis.qaytarmalar.reduce((sum, q) => sum + q.toplam_mebleg, 0)
+          : 0;
+        const ilkinYekun = satis.yekun_mebleg + qaytarilanMebleg;
+        let html = `<div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4 text-sm">
+      <div><strong>Qəbz №:</strong> ${satis.qebz_nomre}</div>
+      <div><strong>Tarix:</strong> ${formatTarix(satis.tarix, true)}</div>
+      <div><strong>Müştəri:</strong> ${satis.musteri_ad || '-'}</div>
+      <div><strong>Telefon:</strong> ${satis.musteri_tel || '-'}</div>
+      <div><strong>Ödəniş:</strong> ${satis.odenis_nov}</div>
+      <div><strong>Mənfəət:</strong> ${formatMebleg(satis.menfeet)}</div>
+      </div>
+      <div class="border-t pt-4">
+      <h4 class="font-semibold mb-3">Məhsullar:</h4>
+      <table class="w-full text-sm">
+      <thead class="bg-gray-100">
+      <tr>
+      <th class="px-3 py-2 text-left">Məhsul</th>
+      <th class="px-3 py-2 text-left">Kateqoriya</th>
+      <th class="px-3 py-2 text-right">Miqdar</th>
+      <th class="px-3 py-2 text-right">Qiymət</th>
+      <th class="px-3 py-2 text-right">Endirim</th>
+      <th class="px-3 py-2 text-right">Yekun</th>
+      </tr>
+      </thead>
+      <tbody>`;
+        satis.mehsullar.forEach((m) => {
+          html += `<tr class="border-b">
+      <td class="px-3 py-2">${m.mal_adi}</td>
+      <td class="px-3 py-2 text-gray-600">${m.nov_adi || '-'}</td>
+      <td class="px-3 py-2 text-right">${m.miqdar}</td>
+      <td class="px-3 py-2 text-right">${formatMebleg(m.satis_qiymeti)}</td>
+      <td class="px-3 py-2 text-right text-red-600">${formatMebleg(m.endirim_mebleg)}</td>
+      <td class="px-3 py-2 text-right font-semibold">${formatMebleg(m.yekun_mebleg)}</td>
+      </tr>`;
+        });
+        html += `</tbody>
+      <tfoot class="bg-gray-50 font-bold">`;
+        if (qaytarilanMebleg > 0) {
+          html += `<tr>
+      <td colspan="5" class="px-3 py-2 text-right">İlkin Yekun:</td>
+      <td class="px-3 py-2 text-right text-blue-600">${formatMebleg(ilkinYekun)}</td>
+      </tr>
+      <tr class="text-red-600">
+      <td colspan="5" class="px-3 py-2 text-right">Qaytarılan:</td>
+      <td class="px-3 py-2 text-right">-${formatMebleg(qaytarilanMebleg)}</td>
+      </tr>
+      <tr class="bg-green-50">
+      <td colspan="5" class="px-3 py-2 text-right text-green-700">XAL
+
+      İS GƏLİR:</td>
+      <td class="px-3 py-2 text-right text-green-700">${formatMebleg(satis.yekun_mebleg)}</td>
+      </tr>`;
+        } else {
+          html += `<tr>
+      <td colspan="5" class="px-3 py-2 text-right">YEKUN:</td>
+      <td class="px-3 py-2 text-right text-blue-600">${formatMebleg(satis.yekun_mebleg)}</td>
+      </tr>`;
+        }
+        html += `</tfoot></table></div>`;
+        // Qaytarma tarixçəsi
+        if (satis.qaytarmalar && satis.qaytarmalar.length > 0) {
+          html += `<div class="border-t pt-4">
+      <h4 class="font-semibold mb-3 text-red-600"><i class="fas fa-undo"></i> Qaytarma Tarixçəsi:</h4>`;
+          satis.qaytarmalar.forEach((q, qIndex) => {
+            html += `<div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+      <div class="flex justify-between items-start mb-2">
+      <span class="text-sm font-semibold text-red-700">Qaytarma #${qIndex + 1}</span>
+      <span class="text-xs text-gray-600">${formatTarix(q.tarix, true)}</span>
+      </div>
+      <table class="w-full text-sm">
+      <thead class="bg-red-100">
+      <tr>
+      <th class="px-2 py-1 text-left">Məhsul</th>
+      <th class="px-2 py-1 text-right">Miqdar</th>
+      <th class="px-2 py-1 text-right">Məbləğ</th>
+      <th class="px-2 py-1 text-left">Səbəb</th>
+      </tr>
+      </thead>
+      <tbody>`;
+            q.mehsullar.forEach((m) => {
+              html += `<tr class="border-b border-red-200">
+      <td class="px-2 py-1">${m.mal_adi}</td>
+      <td class="px-2 py-1 text-right">${m.miqdar}</td>
+      <td class="px-2 py-1 text-right">${formatMebleg(m.mebleg)}</td>
+      <td class="px-2 py-1 text-xs text-gray-600">${m.sebeb || '-'}</td>
+      </tr>`;
+            });
+            html += `</tbody>
+      <tfoot>
+      <tr class="font-semibold bg-red-100">
+      <td colspan="2" class="px-2 py-1 text-right">Cəmi:</td>
+      <td class="px-2 py-1 text-right text-red-700">${formatMebleg(q.toplam_mebleg)}</td>
+      <td></td>
+      </tr>
+      </tfoot>
+      </table>
+      </div>`;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+        document.getElementById('satis-detay-content').innerHTML = html;
+        document.getElementById('modal-satis-detay').classList.remove('hidden');
+      }
+
+      function qebzGosterById(id) {
+        const satis = DATA.satislar.find((s) => s.id === id);
+        if (satis) qebzGoster(satis);
+      }
+      function satisTarixceExport() {
+        const ws_data = [
+          [
+            'Qəbz Kodu',
+            'Barkod',
+            'Malın Adı',
+            'Satılan Miqdar',
+            'Alış Məbləği',
+            'Satış Məbləği',
+            'Məhsul Endirimi',
+            'Qəbz Endirimi',
+            'Qaytarılan Miqdar',
+            'Qaytarılan Məbləğ',
+            'Status',
+            'Cəm',
+            'Net Miqdar',
+          ],
+        ];
+
+        DATA.satislar.forEach((s) => {
+          // 1. Ümumi satış məbl��ği (endirimlər olmadan) hesabla
+          const umumiSatisOrijinal = s.mehsullar.reduce(
+            (sum, m) => sum + m.satis_qiymeti * m.miqdar,
+            0,
+          );
+
+          s.mehsullar.forEach((m) => {
+            // 2. Qaytarılan miqdarı və məbləği hesabla
+            let qaytarilanMiqdar = 0;
+            let qaytarilanMebleg = 0;
+
+            if (s.qaytarmalar && s.qaytarmalar.length > 0) {
+              s.qaytarmalar.forEach((q) => {
+                const qaytarilanMehsul = q.mehsullar.find((qm) => qm.mal_adi === m.mal_adi);
+                if (qaytarilanMehsul) {
+                  qaytarilanMiqdar += qaytarilanMehsul.miqdar;
+                  qaytarilanMebleg += qaytarilanMehsul.mebleg || 0;
+                }
+              });
+            }
+
+            // 3. Status təyin et
+            let status = 'Aktiv';
+            if (qaytarilanMiqdar > 0 && qaytarilanMiqdar < m.miqdar) {
+              status = 'Qismən Qaytarma';
+            } else if (qaytarilanMiqdar === m.miqdar) {
+              status = 'Tam Qaytarma';
+            }
+
+            // 4. Orijinal satış məbləği (endirim olmadan)
+            const orijinalSatis = m.satis_qiymeti * m.miqdar;
+
+            // 5. Məhsul endirimi
+            const mehsulEndirimi = m.endirim_mebleg || 0;
+
+            // 6. Qəbz endirimi (proporsional)
+            let qebzEndirimiHisse = 0;
+            if (s.qebz_endirim > 0 && umumiSatisOrijinal > 0) {
+              const mehsulPayi = orijinalSatis / umumiSatisOrijinal;
+              qebzEndirimiHisse = s.qebz_endirim * mehsulPayi;
+            }
+
+            // 7. CƏM HESABLAMASI
+            const totalEndirim = mehsulEndirimi + qebzEndirimiHisse;
+            const cem = orijinalSatis - totalEndirim;
+
+            // 8. Hesablamalar:
+            const alisMeblegi = m.alis_qiymeti * m.miqdar;
+            const netMiqdar = m.miqdar - qaytarilanMiqdar;
+
+            // 9. Excel sətirini əlavə et (DİQQƏT: Cəm sütunu rəqəm kimi yazılır!)
+            ws_data.push([
+              s.qebz_nomre,
+              m.mal_kod || '-',
+              m.mal_adi,
+              m.miqdar,
+              formatMebleg(alisMeblegi), // String: "100,00 ₼"
+              formatMebleg(cem), // String: "90,00 ₼"
+              mehsulEndirimi > 0 ? formatMebleg(mehsulEndirimi) : '-', // String və ya "-"
+              qebzEndirimiHisse > 0 ? formatMebleg(qebzEndirimiHisse) : '-', // String və ya "-"
+              qaytarilanMiqdar, // Rəqəm
+              formatMebleg(qaytarilanMebleg), // String: "10,00 ₼"
+              status, // String
+              cem, // ⚠️ YALNIZ RƏQƏM (nöqtə ilə, məs: 85.50)
+              netMiqdar, // Rəqəm
+            ]);
+          });
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+        // Sütun enlərini tənzimlə
+        const wscols = [
+          { wch: 15 }, // Qəbz Kodu
+          { wch: 12 }, // Barkod
+          { wch: 25 }, // Malın Adı
+          { wch: 12 }, // Satılan Miqdar
+          { wch: 14 }, // Alış Məblə����i
+          { wch: 14 }, // Satış Məbləği
+          { wch: 14 }, // Məhsul Endirimi
+          { wch: 14 }, // Qəbz Endirimi
+          { wch: 15 }, // Qaytarılan Miqdar
+          { wch: 15 }, // Qaytarılan Məbləğ
+          { wch: 18 }, // Status
+          { wch: 12 }, // Cəm
+          { wch: 12 }, // Net Miqdar
+        ];
+        ws['!cols'] = wscols;
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Satış Tarixçəsi');
+        XLSX.writeFile(wb, `satis_tarixcesi_${new Date().toISOString().split('T')[0]}.xlsx`);
+      }
+
+      function maliyyeYenile() {
+        const bugun = new Date().toISOString().split('T')[0];
+        const buAy = new Date().toISOString().slice(0, 7);
+
+        // Günlük hesablamalar
+        const gunlukSatislar = DATA.satislar.filter((s) => s.tarix.startsWith(bugun));
+        const gunlukGelir = gunlukSatislar.reduce((sum, s) => sum + s.yekun_mebleg, 0);
+        const gunlukMenfeet = gunlukSatislar.reduce((sum, s) => sum + s.menfeet, 0);
+        const gunlukXerc = DATA.xercler
+          .filter((x) => x.tarix === bugun)
+          .reduce((sum, x) => sum + x.mebleg, 0);
+
+        // Aylıq hesablamalar
+        const ayliqSatislar = DATA.satislar.filter((s) => s.tarix.startsWith(buAy));
+        const ayliqGelir = ayliqSatislar.reduce((sum, s) => sum + s.yekun_mebleg, 0);
+        const ayliqMenfeet = ayliqSatislar.reduce((sum, s) => sum + s.menfeet, 0);
+        const ayliqXerc = DATA.xercler
+          .filter((x) => x.tarix.startsWith(buAy))
+          .reduce((sum, x) => sum + x.mebleg, 0);
+
+        // Faiz hesabla
+        const gunlukGelirFoiz = ayliqGelir > 0 ? ((gunlukGelir / ayliqGelir) * 100).toFixed(1) : 0;
+        const gunlukMenfeetFoiz =
+          ayliqMenfeet > 0 ? ((gunlukMenfeet / ayliqMenfeet) * 100).toFixed(1) : 0;
+        const ayliqGelirFoiz = 100;
+        const ayliqMenfeetFoiz = 100;
+
+        document.getElementById('mal-gunluk-gelir').textContent = formatMebleg(gunlukGelir);
+        document.getElementById('mal-gunluk-gelir-foiz').textContent =
+          `Aylıq həcmdə: ${gunlukGelirFoiz}%`;
+        document.getElementById('mal-gunluk-menfeet').textContent = formatMebleg(gunlukMenfeet);
+        document.getElementById('mal-gunluk-menfeet-foiz').textContent =
+          `Aylıq həcmdə: ${gunlukMenfeetFoiz}%`;
+        document.getElementById('mal-ayliq-gelir').textContent = formatMebleg(ayliqGelir);
+        document.getElementById('mal-ayliq-gelir-foiz').textContent = `${ayliqGelirFoiz}%`;
+        document.getElementById('mal-ayliq-menfeet').textContent = formatMebleg(ayliqMenfeet);
+        document.getElementById('mal-ayliq-menfeet-foiz').textContent = `${ayliqMenfeetFoiz}%`;
+        document.getElementById('mal-gunluk-xerc').textContent = formatMebleg(gunlukXerc);
+        document.getElementById('mal-ayliq-xerc').textContent = formatMebleg(ayliqXerc);
+
+        // Seçilən dövr üçün məlumatları sıfırla
+        document.getElementById('mal-secilen-gelir').textContent = '0.00 ₼';
+        document.getElementById('mal-secilen-menfeet').textContent = '0.00 ₼';
+        document.getElementById('gunluk-axin-tbody').innerHTML = '';
+
+        // Default tarix aralığını bu ay olaraq təyin et
+        if (!document.getElementById('maliyye-baslama').value) {
+          document.getElementById('maliyye-baslama').value = buAy + '-01';
+          document.getElementById('maliyye-bitme').value = bugun;
+        }
+
+        xercSiyahisiYukle();
+      }
+
+      function maliyyeFilter() {
+        const baslama = document.getElementById('maliyye-baslama').value;
+        const bitme = document.getElementById('maliyye-bitme').value;
+
+        if (!baslama || !bitme) {
+          alert('Zəhmət olmasa tarix aralığını seçin!');
+          return;
+        }
+
+        const satislar = DATA.satislar.filter(
+          (s) => s.tarix >= baslama && s.tarix <= bitme + 'T23:59:59',
+        );
+        const xercler = DATA.xercler.filter((x) => x.tarix >= baslama && x.tarix <= bitme);
+
+        const umumiGelir = satislar.reduce((sum, s) => sum + s.yekun_mebleg, 0);
+        const umumiMenfeet = satislar.reduce((sum, s) => sum + s.menfeet, 0);
+        const umumiXerc = xercler.reduce((sum, x) => sum + x.mebleg, 0);
+
+        document.getElementById('mal-secilen-gelir').textContent = formatMebleg(umumiGelir);
+        document.getElementById('mal-secilen-menfeet').textContent = formatMebleg(umumiMenfeet);
+
+        // Günlük pul axını cədvəli
+        const gunlukAxin = {};
+
+        // Satislardan günlük məlumat
+        satislar.forEach((s) => {
+          const tarix = s.tarix.split('T')[0];
+          if (!gunlukAxin[tarix]) {
+            gunlukAxin[tarix] = { gelir: 0, menfeet: 0, xerc: 0 };
+          }
+          gunlukAxin[tarix].gelir += s.yekun_mebleg;
+          gunlukAxin[tarix].menfeet += s.menfeet;
+        });
+
+        // Xerclerden günlük məlumat
+        xercler.forEach((x) => {
+          if (!gunlukAxin[x.tarix]) {
+            gunlukAxin[x.tarix] = { gelir: 0, menfeet: 0, xerc: 0 };
+          }
+          gunlukAxin[x.tarix].xerc += x.mebleg;
+        });
+
+        // Cədvəli yarat
+        let html = '';
+        const tarixler = Object.keys(gunlukAxin).sort();
+
+        if (tarixler.length === 0) {
+          html =
+            '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Bu tarix aralığında məlumat yoxdur</td></tr>';
+        } else {
+          tarixler.forEach((tarix) => {
+            const axin = gunlukAxin[tarix];
+            const netMenfeet = axin.menfeet - axin.xerc;
+            const statusClass = netMenfeet >= 0 ? 'text-green-600' : 'text-red-600';
+            const statusIcon = netMenfeet >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+            const statusText = netMenfeet >= 0 ? 'Mənfəət' : 'Zərər';
+
+            html += `<tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium">${formatTarix(tarix)}</td>
+                    <td class="px-4 py-3 text-right text-green-600">${formatMebleg(axin.gelir)}</td>
+                    <td class="px-4 py-3 text-right text-red-600">${formatMebleg(axin.xerc)}</td>
+                    <td class="px-4 py-3 text-right font-bold ${statusClass}">${formatMebleg(netMenfeet)}</td>
+                    <td class="px-4 py-3"><span class="${statusClass}"><i class="fas ${statusIcon}"></i> ${statusText}</span></td>
+                  </tr>`;
+          });
+        }
+
+        document.getElementById('gunluk-axin-tbody').innerHTML = html;
+      }
+
+      function maliyyeExcelExport() {
+        const baslama = document.getElementById('maliyye-baslama').value;
+        const bitme = document.getElementById('maliyye-bitme').value;
+
+        if (!baslama || !bitme) {
+          alert('Zəhmət olmasa tarix aralığını seçin!');
+          return;
+        }
+
+        const satislar = DATA.satislar.filter(
+          (s) => s.tarix >= baslama && s.tarix <= bitme + 'T23:59:59',
+        );
+        const xercler = DATA.xercler.filter((x) => x.tarix >= baslama && x.tarix <= bitme);
+
+        // Excel üçün məlumat hazırla
+        const ws_data = [['Tarix', 'Gəlir', 'Xərc', 'Mənfəət', 'Əməliyyat Sayı', 'Qeyd']];
+
+        const gunlukAxin = {};
+
+        satislar.forEach((s) => {
+          const tarix = s.tarix.split('T')[0];
+          if (!gunlukAxin[tarix]) {
+            gunlukAxin[tarix] = { gelir: 0, menfeet: 0, xerc: 0, satisSay: 0 };
+          }
+          gunlukAxin[tarix].gelir += s.yekun_mebleg;
+          gunlukAxin[tarix].menfeet += s.menfeet;
+          gunlukAxin[tarix].satisSay += 1;
+        });
+
+        xercler.forEach((x) => {
+          if (!gunlukAxin[x.tarix]) {
+            gunlukAxin[x.tarix] = { gelir: 0, menfeet: 0, xerc: 0, satisSay: 0 };
+          }
+          gunlukAxin[x.tarix].xerc += x.mebleg;
+        });
+
+        const tarixler = Object.keys(gunlukAxin).sort();
+        tarixler.forEach((tarix) => {
+          const axin = gunlukAxin[tarix];
+          const netMenfeet = axin.menfeet - axin.xerc;
+          ws_data.push([
+            tarix,
+            axin.gelir,
+            axin.xerc,
+            netMenfeet,
+            axin.satisSay,
+            netMenfeet >= 0 ? 'Mənfəət' : 'Zərər',
+          ]);
+        });
+
+        // Ümumi məbləğlər
+        const umumiGelir = satislar.reduce((sum, s) => sum + s.yekun_mebleg, 0);
+        const umumiXerc = xercler.reduce((sum, x) => sum + x.mebleg, 0);
+        const umumiMenfeet = satislar.reduce((sum, s) => sum + s.menfeet, 0) - umumiXerc;
+
+        ws_data.push([]);
+        ws_data.push([
+          'ÜMUMİ',
+          umumiGelir,
+          umumiXerc,
+          umumiMenfeet,
+          '',
+          umumiMenfeet >= 0 ? 'Mənfəət' : 'Zərər',
+        ]);
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+        // Sütun enləri
+        ws['!cols'] = [
+          { wch: 15 }, // Tarix
+          { wch: 15 }, // Gəlir
+          { wch: 15 }, // Xərc
+          { wch: 15 }, // Mənfəət
+          { wch: 12 }, // Əməliyyat Sayı
+          { wch: 15 }, // Qeyd
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Maliyyə Hesabatı');
+        XLSX.writeFile(wb, `maliyye_hesabati_${baslama}_${bitme}.xlsx`);
+      }
+
+      function xercElave() {
+        const ad = document.getElementById('xerc-ad').value.trim();
+        const mebleg = parseFloat(document.getElementById('xerc-mebleg').value);
+        const tarix = document.getElementById('xerc-tarix').value;
+        if (!ad || !mebleg || !tarix) {
+          alert('Bütün xanaları doldurun!');
+          return;
+        }
+        DATA.xercler.push({ id: Date.now(), ad: ad, mebleg: mebleg, tarix: tarix });
+        saveData();
+        document.getElementById('xerc-ad').value = '';
+        document.getElementById('xerc-mebleg').value = '';
+        maliyyeYenile();
+      }
+
+      function xercSiyahisiYukle() {
+        const sorted = [...DATA.xercler].sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
+        let html = '';
+        if (sorted.length === 0) {
+          html =
+            '<tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">Xərc qeydə alınmayıb</td></tr>';
+        } else {
+          sorted.forEach((x) => {
+            html += `<tr class="border-b hover:bg-gray-50">
+      <td class="px-4 py-3">${formatTarix(x.tarix)}</td>
+      <td class="px-4 py-3">${x.ad}</td>
+      <td class="px-4 py-3 text-right font-semibold text-red-600">${formatMebleg(x.mebleg)}</td>
+      <td class="px-4 py-3 text-center">
+      <button onclick="xercSil(${x.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+      </td>
+      </tr>`;
+          });
+        }
+        document.getElementById('xerc-tbody').innerHTML = html;
+      }
+
+      function xercSil(id) {
+        if (!confirm('Bu xərci silmək istədiyinizdən əminsiniz?')) return;
+        DATA.xercler = DATA.xercler.filter((x) => x.id !== id);
+        saveData();
+        maliyyeYenile();
+      }
+
+      function kateqoriyalariYukle() {
+        const selects = [
+          document.getElementById('yeni-mal-nov'),
+          document.getElementById('anbar-nov-filter'),
+        ];
+        selects.forEach((select) => {
+          const options = DATA.kateqoriyalar
+            .map((k) => `<option value="${k.id}">${k.nov_adi}</option>`)
+            .join('');
+          if (select.id === 'anbar-nov-filter') {
+            select.innerHTML = '<option value="">Bütün kateqoriyalar</option>' + options;
+          } else {
+            select.innerHTML = '<option value="">Növü seçin...</option>' + options;
+          }
+        });
+        let html = '';
+        DATA.kateqoriyalar.forEach((k) => {
+          html += `<span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+      ${k.nov_adi}
+      <button onclick="kateqoriyaSil(${k.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-times"></i></button>
+      </span>`;
+        });
+        document.getElementById('kateqoriya-list').innerHTML = html;
+      }
+
+      function kateqoriyaElave() {
+        const ad = document.getElementById('yeni-kateqoriya').value.trim();
+        if (!ad) {
+          alert('Kateqoriya adı daxil edin!');
+          return;
+        }
+        if (DATA.kateqoriyalar.find((k) => k.nov_adi.toLowerCase() === ad.toLowerCase())) {
+          alert('Bu kateqoriya artıq mövcuddur!');
+          return;
+        }
+        const yeniId = Math.max(...DATA.kateqoriyalar.map((k) => k.id)) + 1;
+        DATA.kateqoriyalar.push({ id: yeniId, nov_adi: ad });
+        saveData();
+        document.getElementById('yeni-kateqoriya').value = '';
+        kateqoriyalariYukle();
+      }
+
+      function kateqoriyaSil(id) {
+        if (DATA.anbar.some((m) => m.nov_id === id)) {
+          alert('Bu kateqoriyadan məhsullar mövcuddur, silinə bilməz!');
+          return;
+        }
+        if (!confirm('Bu kateqoriyanı silmək istədiyinizdən əminsiniz?')) return;
+        DATA.kateqoriyalar = DATA.kateqoriyalar.filter((k) => k.id !== id);
+        saveData();
+        kateqoriyalariYukle();
+      }
+
+      // Rəng funksiyaları
+      function rengleriYukle() {
+        const select = document.getElementById('yeni-mal-reng');
+        if (select) {
+          const options = DATA.rengler
+            .map((r) => `<option value="${r.id}">${r.ad}</option>`)
+            .join('');
+          select.innerHTML = '<option value="">Rəng seçin (istəyə bağlı)</option>' + options;
+        }
+        let html = '';
+        DATA.rengler.forEach((r) => {
+          html += `<div class="border rounded-lg p-3 flex items-center justify-between" style="background: linear-gradient(135deg, ${r.kod}22 0%, ${r.kod}44 100%);">
+      <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded border" style="background-color: ${r.kod};"></div>
+      <span class="font-medium">${r.ad}</span>
+      </div>
+      <button onclick="rngSil(${r.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+      </div>`;
+        });
+        document.getElementById('rng-list').innerHTML = html;
+      }
+
+      function rngElave() {
+        const ad = document.getElementById('yeni-rng-ad').value.trim();
+        const kod = document.getElementById('yeni-rng-kod').value;
+        if (!ad) {
+          alert('Rəng adı daxil edin!');
+          return;
+        }
+        if (DATA.rengler.find((r) => r.ad.toLowerCase() === ad.toLowerCase())) {
+          alert('Bu rəng artıq mövcuddur!');
+          return;
+        }
+        const yeniId = Math.max(...DATA.rengler.map((r) => r.id)) + 1;
+        DATA.rengler.push({ id: yeniId, ad: ad, kod: kod });
+        saveData();
+        document.getElementById('yeni-rng-ad').value = '';
+        document.getElementById('yeni-rng-kod').value = '#ff0000';
+        rengleriYukle();
+      }
+
+      function rngSil(id) {
+        if (DATA.anbar.some((m) => m.reng_id === id)) {
+          alert('Bu rəngə mal məhsullar mövcuddur, silinə bilməz!');
+          return;
+        }
+        if (!confirm('Bu rəngi silmək istədiyinizdən əminsiniz?')) return;
+        DATA.rengler = DATA.rengler.filter((r) => r.id !== id);
+        saveData();
+        rengleriYukle();
+      }
+
+      // Ölçü funksiyaları
+      function olculeriYukle() {
+        const select = document.getElementById('yeni-mal-olcu');
+        if (select) {
+          const options = DATA.olculer
+            .map((o) => `<option value="${o.id}">${o.ad}</option>`)
+            .join('');
+          select.innerHTML = '<option value="">Ölçü seçin...</option>' + options;
+        }
+        let html = '';
+        DATA.olculer.forEach((o) => {
+          html += `<span class="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+      ${o.ad}
+      <button onclick="olcuSil(${o.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-times"></i></button>
+      </span>`;
+        });
+        document.getElementById('olcu-list').innerHTML = html;
+      }
+
+      function olcuElave() {
+        const ad = document.getElementById('yeni-olcu-ad').value.trim();
+        if (!ad) {
+          alert('Ölçü adı daxil edin!');
+          return;
+        }
+        if (DATA.olculer.find((o) => o.ad.toLowerCase() === ad.toLowerCase())) {
+          alert('Bu ölçü artıq mövcuddur!');
+          return;
+        }
+        const yeniId = Math.max(...DATA.olculer.map((o) => o.id)) + 1;
+        DATA.olculer.push({ id: yeniId, ad: ad });
+        saveData();
+        document.getElementById('yeni-olcu-ad').value = '';
+        olculeriYukle();
+      }
+
+      function olcuSil(id) {
+        if (DATA.anbar.some((m) => m.olcu_id === id)) {
+          alert('Bu ölçüyə mal məhsullar mövcuddur, silinə bilməz!');
+          return;
+        }
+        if (!confirm('Bu ölçünü silmək istədiyinizdən əminsiniz?')) return;
+        DATA.olculer = DATA.olculer.filter((o) => o.id !== id);
+        saveData();
+        olculeriYukle();
+      }
+
+      function techizatcilariYukle() {
+        const select = document.getElementById('qaime-techizatci');
+        const options = DATA.techizatcilar
+          .map((t) => `<option value="${t.id}">${t.ad}</option>`)
+          .join('');
+        select.innerHTML = '<option value="">Seçin...</option>' + options;
+        let html = '';
+        if (DATA.techizatcilar.length === 0) {
+          html =
+            '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-500">Təchizatçı əlavə edilməyib</td></tr>';
+        } else {
+          DATA.techizatcilar.forEach((t) => {
+            html += `<tr class="border-b hover:bg-gray-50">
+      <td class="px-4 py-3">${t.ad}</td>
+      <td class="px-4 py-3">${t.telefon || '-'}</td>
+      <td class="px-4 py-3 text-center">
+      <button onclick="techizatciSil(${t.id})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+      </td>
+      </tr>`;
+          });
+        }
+        document.getElementById('techizatci-tbody').innerHTML = html;
+      }
+
+      function techizatciElave() {
+        const ad = document.getElementById('yeni-techizatci-ad').value.trim();
+        const telefon = document.getElementById('yeni-techizatci-tel').value.trim();
+        if (!ad) {
+          alert('Təchizatçı adı daxil edin!');
+          return;
+        }
+        DATA.techizatcilar.push({ id: Date.now(), ad: ad, telefon: telefon });
+        saveData();
+        document.getElementById('yeni-techizatci-ad').value = '';
+        document.getElementById('yeni-techizatci-tel').value = '';
+        techizatcilariYukle();
+      }
+
+      function techizatciSil(id) {
+        if (!confirm('Bu təchizatçını silmək istədiyinizdən əminsiniz?')) return;
+        DATA.techizatcilar = DATA.techizatcilar.filter((t) => t.id !== id);
+        saveData();
+        techizatcilariYukle();
+      }
+
+      function formatMebleg(mebleg, showSymbol = true) {
+        return mebleg.toFixed(2).replace('.', ',') + (showSymbol ? ' ₼' : '');
+      }
+      function formatTarix(tarix, withTime = false) {
+        const d = new Date(tarix);
+        const options = withTime
+          ? {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            }
+          : { year: 'numeric', month: '2-digit', day: '2-digit' };
+        return d.toLocaleDateString('az-AZ', options);
+      }
+
+      function modalBagla(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+      }
+
+      function dataExportEt() {
+        const dataStr = JSON.stringify(DATA, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `erp_yedekleme_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function dataTemizle() {
+        if (
+          !confirm(
+            '<i class="fas fa-exclamation-triangle"></i> DİQQƏT! Bütün məlumatlar silinəcək və geri qaytarıla bilməz. Davam etmək istədiyinizdən əminsiniz?',
+          )
+        )
+          return;
+        if (!confirm('Son xəbərdarlıq! Bu əməliyyatı geri qaytarmaq MÜMKÜN DEYİL!')) return;
+        DATA = {
+          anbar: [],
+          kateqoriyalar: [
+            { id: 1, nov_adi: 'Papaq' },
+            { id: 2, nov_adi: 'Şalvar' },
+            { id: 3, nov_adi: 'T-Shirt' },
+            { id: 4, nov_adi: 'Cins' },
+            { id: 5, nov_adi: 'Klassik ayaqqabı' },
+            { id: 6, nov_adi: 'Krasofka' },
+            { id: 7, nov_adi: 'Palto' },
+            { id: 8, nov_adi: 'Kurtka' },
+            { id: 9, nov_adi: 'Köynək' },
+          ],
+          rengler: [
+            { id: 1, ad: 'Qara', kod: '#000000' },
+            { id: 2, ad: 'Ağ', kod: '#FFFFFF' },
+            { id: 3, ad: 'Qırmızı', kod: '#FF0000' },
+            { id: 4, ad: 'Göy', kod: '#0000FF' },
+            { id: 5, ad: 'Yaşıl', kod: '#008000' },
+            { id: 6, ad: 'Sarı', kod: '#FFFF00' },
+            { id: 7, ad: 'Narıncı', kod: '#FFA500' },
+            { id: 8, ad: 'Bənövşəyi', kod: '#800080' },
+          ],
+          olculer: [
+            { id: 1, ad: 'S' },
+            { id: 2, ad: 'M' },
+            { id: 3, ad: 'L' },
+            { id: 4, ad: 'XL' },
+            { id: 5, ad: 'XXL' },
+            { id: 6, ad: 'XXXL' },
+            { id: 7, ad: '36' },
+            { id: 8, ad: '37' },
+            { id: 9, ad: '38' },
+            { id: 10, ad: '39' },
+            { id: 11, ad: '40' },
+            { id: 12, ad: '41' },
+            { id: 13, ad: '42' },
+            { id: 14, ad: '43' },
+            { id: 15, ad: '44' },
+          ],
+          techizatcilar: [],
+          qaimeler: [], // qaytarmalar: [] array each qaime will have
+          satislar: [],
+          xercler: [],
+          sebet: [],
+          qaytarmalar: [], // Müştəri qaytarmaları
+          magazaMelumat: {
+            ad: 'MAĞAZA ADI',
+            unvan: 'Bakı şəh., Nəsimi ray.',
+            telefon: '+994 XX XXX XX XX',
+          },
+          umumiEndirim: { tipi: null, deyer: 0 },
+        };
+        saveData();
+        alert('<i class="fas fa-check-circle"></i> Bütün məlumatlar silindi!');
+        location.reload();
+      }
+
+      // Mağaza məlumatları
+      function magazaMelumatYukle() {
+        document.getElementById('magaza-ad').value = DATA.magazaMelumat.ad;
+        document.getElementById('magaza-unvan').value = DATA.magazaMelumat.unvan;
+        document.getElementById('magaza-tel').value = DATA.magazaMelumat.telefon;
+      }
+
+      function magazaMelumatSaxla() {
+        DATA.magazaMelumat = {
+          ad: document.getElementById('magaza-ad').value.trim() || 'MAĞAZA ADI',
+          unvan: document.getElementById('magaza-unvan').value.trim() || 'Bakı şəh.',
+          telefon: document.getElementById('magaza-tel').value.trim() || '+994 XX XXX XX XX',
+        };
+        saveData();
+        alert('<i class="fas fa-check-circle"></i> Mağaza məlumatları saxlanıldı!');
+      }
+
+      // Daxil olma tarixçəsi
+      function daxilolmaTarixceYukle() {
+        daxilolmaTarixceFilter();
+      }
+
+      function daxilolmaTarixceFilter() {
+        const baslama = document.getElementById('daxilolma-baslama').value;
+        const bitme = document.getElementById('daxilolma-bitme').value;
+        let filtered = [...DATA.qaimeler];
+        if (baslama) filtered = filtered.filter((q) => q.tarix >= baslama);
+        if (bitme) filtered = filtered.filter((q) => q.tarix <= bitme);
+        filtered.sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
+        let html = '';
+        if (filtered.length === 0) {
+          html =
+            '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Daxil olma tapılmadı</td></tr>';
+        } else {
+          filtered.forEach((q) => {
+            const mehsulSay = q.mehsullar.length;
+            const umumiMebleg = q.mehsullar.reduce((sum, m) => sum + m.miqdar * m.alis_qiymeti, 0);
+            const techizatci = DATA.techizatcilar.find((t) => t.id == q.techizatci_id);
+
+            // Qaytarılmış məhsulları hesabla
+            let qaytarilanMebleg = 0;
+            let qaytarilanMehsulSay = 0;
+            if (q.qaytarmalar && q.qaytarmalar.length > 0) {
+              qaytarilanMebleg = q.qaytarmalar.reduce((sum, qr) => sum + qr.mebleg, 0);
+              qaytarilanMehsulSay = q.qaytarmalar.reduce((sum, qr) => sum + qr.miqdar, 0);
+            }
+            const qaytarmaStatus =
+              qaytarilanMehsulSay > 0
+                ? `<span class="text-xs text-red-600 font-semibold">${qaytarilanMehsulSay} ədəd</span>`
+                : '<span class="text-xs text-gray-400">-</span>';
+
+            html += `<tr class="border-b hover:bg-gray-50">
+      <td class="px-4 py-3 font-semibold">${q.qaime_kod}</td>
+      <td class="px-4 py-3">${formatTarix(q.tarix)}</td>
+      <td class="px-4 py-3">${techizatci ? techizatci.ad : '-'}</td>
+      <td class="px-4 py-3 text-right">${mehsulSay}</td>
+      <td class="px-4 py-3 text-right font-bold text-green-600">${formatMebleg(umumiMebleg)}</td>
+      <td class="px-4 py-3 text-center">${qaytarmaStatus}</td>
+      <td class="px-4 py-3 text-center">
+      <button onclick="qaimeDetayGoster(${q.id})" class="text-blue-600 hover:text-blue-800 mr-2" title="Detallar"><i class="fas fa-eye"></i></button>
+      <button onclick="techizatciyaQaytarmaBaslat(${q.id})" class="text-orange-600 hover:text-orange-800" title="Təchizatçıya Qaytar"><i class="fas fa-undo-alt"></i></button>
+      </td>
+      </tr>`;
+          });
+        }
+        document.getElementById('daxilolma-tbody').innerHTML = html;
+      }
+
+      function qaimeDetayGoster(id) {
+        const qaime = DATA.qaimeler.find((q) => q.id === id);
+        if (!qaime) return;
+        const techizatci = DATA.techizatcilar.find((t) => t.id == qaime.techizatci_id);
+
+        // Qaytarılmış məlumatları hesabla
+        let qaytarilanMebleg = 0;
+        let qaytarilanMehsulSay = 0;
+        if (qaime.qaytarmalar && qaime.qaytarmalar.length > 0) {
+          qaytarilanMebleg = qaime.qaytarmalar.reduce((sum, qr) => sum + qr.mebleg, 0);
+          qaytarilanMehsulSay = qaime.qaytarmalar.reduce((sum, qr) => sum + qr.miqdar, 0);
+        }
+        const umumiMebleg = qaime.mehsullar.reduce((sum, m) => sum + m.miqdar * m.alis_qiymeti, 0);
+        const netMebleg = umumiMebleg - qaytarilanMebleg;
+
+        let html = `
+      <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4 text-sm">
+      <div><strong>Qaimə Kodu:</strong> ${qaime.qaime_kod}</div>
+      <div><strong>Tarix:</strong> ${formatTarix(qaime.tarix)}</div>
+      <div><strong>Təchizatçı:</strong> ${techizatci ? techizatci.ad : '-'}</div>
+      <div><strong>Məhsul sayı:</strong> ${qaime.mehsullar.length}</div>
+      </div>
+      <div class="border-t pt-4">
+      <h4 class="font-semibold mb-3">Məhsullar:</h4>
+      <table class="w-full text-sm">
+      <thead class="bg-gray-100">
+      <tr>
+      <th class="px-3 py-2 text-left">Mal Kodu</th>
+      <th class="px-3 py-2 text-left">Məhsul</th>
+      <th class="px-3 py-2 text-right">Miqdar</th>
+      <th class="px-3 py-2 text-right">Alış Qiyməti</th>
+      <th class="px-3 py-2 text-right">Satış Qiyməti</th>
+      <th class="px-3 py-2 text-right">Cəmi</th>
+      </tr>
+      </thead>
+      <tbody>`;
+        let toplamCemi = 0;
+        qaime.mehsullar.forEach((m) => {
+          const cemi = m.miqdar * m.alis_qiymeti;
+          toplamCemi += cemi;
+          html += `<tr class="border-b">
+      <td class="px-3 py-2">${m.mal_kod}</td>
+      <td class="px-3 py-2">${m.mal_adi}</td>
+      <td class="px-3 py-2 text-right">${m.miqdar}</td>
+      <td class="px-3 py-2 text-right">${formatMebleg(m.alis_qiymeti)}</td>
+      <td class="px-3 py-2 text-right">${formatMebleg(m.satis_qiymeti)}</td>
+      <td class="px-3 py-2 text-right font-semibold">${formatMebleg(cemi)}</td>
+      </tr>`;
+        });
+        html += `</tbody>
+      <tfoot class="bg-gray-50 font-bold">
+      <tr>
+      <td colspan="5" class="px-3 py-2 text-right">ÜMUMİ:</td>
+      <td class="px-3 py-2 text-right text-green-600">${formatMebleg(toplamCemi)}</td>
+      </tr>
+      </tfoot>
+      </table>
+      </div>`;
+
+        // Qaytarma tarixçəsi
+        if (qaime.qaytarmalar && qaime.qaytarmalar.length > 0) {
+          html += `<div class="border-t pt-4">
+      <h4 class="font-semibold mb-3 text-orange-600"><i class="fas fa-undo-alt"></i> Təchizatçıya Qaytarma Tarixçəsi:</h4>`;
+
+          // Qaytarmaları qruplaşdır
+          const qaytarmaQruplari = {};
+          qaime.qaytarmalar.forEach((qr) => {
+            const tarix = qr.tarix.split('T')[0];
+            if (!qaytarmaQruplari[tarix]) {
+              qaytarmaQruplari[tarix] = { mehsullar: [], umumiMebleg: 0 };
+            }
+            qaytarmaQruplari[tarix].mehsullar.push(qr);
+            qaytarmaQruplari[tarix].umumiMebleg += qr.mebleg;
+          });
+
+          Object.keys(qaytarmaQruplari).forEach((tarix) => {
+            const qrup = qaytarmaQruplari[tarix];
+            html += `<div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+      <div class="flex justify-between items-start mb-2">
+      <span class="text-sm font-semibold text-orange-700">${formatTarix(tarix)}</span>
+      <span class="text-sm font-bold text-orange-600">${formatMebleg(qrup.umumiMebleg)}</span>
+      </div>
+      <table class="w-full text-sm">
+      <thead class="bg-orange-100">
+      <tr>
+      <th class="px-2 py-1 text-left">Məhsul</th>
+      <th class="px-2 py-1 text-right">Miqdar</th>
+      <th class="px-2 py-1 text-right">Qiymət</th>
+      <th class="px-2 py-1 text-right">Məbləğ</th>
+      <th class="px-2 py-1 text-left">Səbəb</th>
+      </tr>
+      </thead>
+      <tbody>`;
+            qrup.mehsullar.forEach((qr) => {
+              html += `<tr class="border-b border-orange-200">
+      <td class="px-2 py-1">${qr.mal_adi} <span class="text-xs text-gray-600">(${qr.reng_adi || '-'}, ${qr.olcu_adi})</span></td>
+      <td class="px-2 py-1 text-right">${qr.miqdar}</td>
+      <td class="px-2 py-1 text-right">${formatMebleg(qr.vahid_qiymet)}</td>
+      <td class="px-2 py-1 text-right text-orange-700">${formatMebleg(qr.mebleg)}</td>
+      <td class="px-2 py-1 text-xs text-gray-600">${qr.sebeb || '-'}</td>
+      </tr>`;
+            });
+            html += `</tbody>
+      </table>
+      </div>`;
+          });
+
+          html += `<div class="bg-orange-100 border border-orange-300 rounded-lg p-3 mt-3">
+      <div class="flex justify-between items-center">
+      <span class="font-bold text-orange-800">Ümumi Qaytarılan:</span>
+      <span class="font-bold text-orange-700 text-lg">${formatMebleg(qaytarilanMebleg)}</span>
+      </div>
+      <div class="flex justify-between items-center mt-2 text-sm">
+      <span class="text-orange-700">Qalıq Məbləğ:</span>
+      <span class="text-orange-600 font-semibold">${formatMebleg(netMebleg)}</span>
+      </div>
+      </div>
+      </div>`;
+        }
+
+        html += `</div>`;
+        document.getElementById('qaime-detay-content').innerHTML = html;
+        document.getElementById('modal-qaime-detay').classList.remove('hidden');
+      }
+
+      function daxilolmaTarixceExport() {
+        const ws_data = [
+          [
+            'Qaimə Kodu',
+            'Tarix',
+            'Təchizatçı',
+            'Mal Kodu',
+            'Mal Adı',
+            'Növ',
+            'Rəng',
+            'Ölçü',
+            'Miqdar',
+            'Alış Qiyməti',
+            'Satış Qiyməti',
+            'Cəmi',
+            'Qaytarılıb',
+            'Qaytarma Səbəbi',
+          ],
+        ];
+        DATA.qaimeler.forEach((q) => {
+          const techizatci = DATA.techizatcilar.find((t) => t.id == q.techizatci_id);
+          q.mehsullar.forEach((m) => {
+            // Qaytarılıb?
+            let qaytarilib = 'Xeyr';
+            let qaytarmaSebeb = '';
+            if (q.qaytarmalar && q.qaytarmalar.length > 0) {
+              const qaytarma = q.qaytarmalar.find(
+                (qr) =>
+                  qr.mal_kod === m.mal_kod && qr.reng_id === m.reng_id && qr.olcu_id === m.olcu_id,
+              );
+              if (qaytarma) {
+                qaytarilib = 'Bəli';
+                qaytarmaSebeb = qaytarma.sebeb || '';
+              }
+            }
+            ws_data.push([
+              q.qaime_kod,
+              formatTarix(q.tarix),
+              techizatci ? techizatci.ad : '',
+              m.mal_kod,
+              m.mal_adi,
+              m.nov_adi,
+              m.reng_adi || '-',
+              m.olcu_adi || '-',
+              m.miqdar,
+              m.alis_qiymeti,
+              m.satis_qiymeti,
+              m.miqdar * m.alis_qiymeti,
+              qaytarilib,
+              qaytarmaSebeb,
+            ]);
+          });
+        });
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, 'Daxil Olma');
+        XLSX.writeFile(wb, `daxilolma_tarixce_${new Date().toISOString().split('T')[0]}.xlsx`);
+      }
+
+      // Qaytarma funksiyaları
+      function qaytarmaBaslat(satisId) {
+        const satis = DATA.satislar.find((s) => s.id === satisId);
+        if (!satis) return;
+        let html = `
+      <div class="mb-4">
+      <div class="bg-gray-100 p-3 rounded-lg mb-4">
+      <p class="text-sm"><strong>Qəbz №:</strong> ${satis.qebz_nomre}</p>
+      <p class="text-sm"><strong>Tarix:</strong> ${formatTarix(satis.tarix, true)}</p>
+      <p class="text-sm"><strong>Yekun:</strong> ${formatMebleg(satis.yekun_mebleg)}</p>
+      </div>
+      <h4 class="font-semibold mb-3">Qaytarılacaq məhsulları seçin:</h4>
+      <div class="space-y-2" id="qaytarma-mehsullar">`;
+        satis.mehsullar.forEach((m, index) => {
+          // Artıq qaytarılmış miqdarı yoxla
+          const qaytarilanMiqdar = DATA.qaytarmalar
+            .filter((q) => q.satis_id === satisId && q.mal_id === m.mal_id)
+            .reduce((sum, q) => sum + q.miqdar, 0);
+          const qaliqMiqdar = m.miqdar - qaytarilanMiqdar;
+          if (qaliqMiqdar > 0) {
+            html += `
+      <div class="border rounded-lg p-3">
+      <div class="flex justify-between items-start mb-2">
+      <div class="flex-1">
+      <p class="font-medium">${m.mal_adi}</p>
+      <p class="text-xs text-gray-600">${m.mal_kod}</p>
+      </div>
+      <label class="flex items-center gap-2">
+      <input type="checkbox" class="qaytarma-check w-4 h-4" data-index="${index}">
+      <span class="text-sm">Qaytarılsın</span>
+      </label>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+      <div>
+      <span class="text-gray-600">Satılan miqdar:</span>
+      <span class="font-semibold">${m.miqdar}</span>
+      </div>
+      <div>
+      <span class="text-gray-600">Qalıq:</span>
+      <span class="font-semibold">${qaliqMiqdar}</span>
+      </div>
+      </div>
+      <div class="mt-2 hidden" id="qaytarma-detallar-${index}">
+      <label class="block text-sm text-gray-700 mb-1">Qaytarılacaq miqdar:</label>
+      <input type="number" min="1" max="${qaliqMiqdar}" value="${qaliqMiqdar}"
+      class="w-full px-3 py-2 border rounded-lg qaytarma-miqdar" data-index="${index}">
+      <label class="block text-sm text-gray-700 mb-1 mt-2">Səbəb:</label>
+      <textarea class="w-full px-3 py-2 border rounded-lg qaytarma-sebeb text-sm" rows="2" data-index="${index}" placeholder="Qaytarma səbəbi..."></textarea>
+      </div>
+      </div>`;
+          }
+        });
+        html += `
+      </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+      <button onclick="qaytarmaniTamamla(${satisId})" class="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700">
+      <i class="fas fa-check"></i> Qaytarmanı Tamamla
+      </button>
+      <button onclick="modalBagla('modal-qaytarma')" class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700">
+      İmtina
+      </button>
+      </div>
+      `;
+        document.getElementById('qaytarma-content').innerHTML = html;
+        document.getElementById('modal-qaytarma').classList.remove('hidden');
+        // Checkbox event listener
+        document.querySelectorAll('.qaytarma-check').forEach((cb) => {
+          cb.addEventListener('change', function () {
+            const index = this.dataset.index;
+            const detallar = document.getElementById(`qaytarma-detallar-${index}`);
+            if (this.checked) {
+              detallar.classList.remove('hidden');
+            } else {
+              detallar.classList.add('hidden');
+            }
+          });
+        });
+      }
+
+      function qaytarmaniTamamla(satisId) {
+        const satis = DATA.satislar.find((s) => s.id === satisId);
+        if (!satis) return;
+        const secilenler = [];
+        document.querySelectorAll('.qaytarma-check:checked').forEach((cb) => {
+          const index = parseInt(cb.dataset.index);
+          const miqdarInput = document.querySelector(`.qaytarma-miqdar[data-index="${index}"]`);
+          const sebebInput = document.querySelector(`.qaytarma-sebeb[data-index="${index}"]`);
+          secilenler.push({
+            mehsul: satis.mehsullar[index],
+            miqdar: parseInt(miqdarInput.value),
+            sebeb: sebebInput.value.trim(),
+          });
+        });
+        if (secilenler.length === 0) {
+          alert('Ən azı bir məhsul seçin!');
+          return;
+        }
+        let umumiQaytarmaMebleg = 0;
+        // Qaytarmaları qeyd et
+        secilenler.forEach((s) => {
+          const vahidQiymet =
+            (s.mehsul.yekun_mebleg_son || s.mehsul.yekun_mebleg) / s.mehsul.miqdar;
+          const qaytarmaMebleg = vahidQiymet * s.miqdar;
+          umumiQaytarmaMebleg += qaytarmaMebleg;
+          DATA.qaytarmalar.push({
+            id: Date.now() + Math.random(),
+            satis_id: satisId,
+            qebz_nomre: satis.qebz_nomre,
+            mal_id: s.mehsul.mal_id,
+            mal_adi: s.mehsul.mal_adi,
+            mal_kod: s.mehsul.mal_kod,
+            miqdar: s.miqdar,
+            vahid_qiymet: vahidQiymet,
+            mebleg: qaytarmaMebleg,
+            alis_qiymeti: s.mehsul.alis_qiymeti,
+            sebeb: s.sebeb,
+            tarix: new Date().toISOString(),
+          });
+          // Anbara geri əlavə et
+          const anbarMal = DATA.anbar.find((a) => a.id === s.mehsul.mal_id);
+          if (anbarMal) {
+            anbarMal.qaliq += s.miqdar;
+          }
+        });
+        // Satışa qaytarma məlumatını əlavə et
+        if (!satis.qaytarmalar) {
+          satis.qaytarmalar = [];
+        }
+        satis.qaytarmalar.push({
+          tarix: new Date().toISOString(),
+          mehsullar: secilenler.map((s) => ({
+            mal_adi: s.mehsul.mal_adi,
+            mal_kod: s.mehsul.mal_kod,
+            miqdar: s.miqdar,
+            mebleg:
+              ((s.mehsul.yekun_mebleg_son || s.mehsul.yekun_mebleg) / s.mehsul.miqdar) * s.miqdar,
+            sebeb: s.sebeb,
+          })),
+          toplam_mebleg: umumiQaytarmaMebleg,
+        });
+        // Satış məbləğini yenilə
+        satis.yekun_mebleg -= umumiQaytarmaMebleg;
+        // Mənfəəti düzəlt
+        secilenler.forEach((s) => {
+          const qaytarilanMenfeet = (s.mehsul.menfeet / s.mehsul.miqdar) * s.miqdar;
+          satis.menfeet -= qaytarilanMenfeet;
+        });
+        saveData();
+        alert(`<i class="fas fa-check-circle"></i> ${secilenler.length} məhsul uğurla qaytarıldı!
+      <i class="fas fa-money-bill-wave"></i> Qaytarılan məbləğ: ${formatMebleg(umumiQaytarmaMebleg)}`);
+        modalBagla('modal-qaytarma');
+        satisTarixceFilter();
+      }
+
+      // ============================================
+      // TƏCHİZATÇIYA QAYTARMA FUNKSİYALARI
+      // ============================================
+      function techizatciyaQaytarmaBaslat(qaimeId) {
+        const qaime = DATA.qaimeler.find((q) => q.id === qaimeId);
+        if (!qaime) return;
+
+        const techizatci = DATA.techizatcilar.find((t) => t.id == qaime.techizatci_id);
+
+        // Qaytarıla bilən məhsulları yoxla (anbarda olan)
+        let html = `
+      <div class="mb-4">
+      <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4">
+      <p class="text-sm"><strong>Qaimə Kodu:</strong> ${qaime.qaime_kod}</p>
+      <p class="text-sm"><strong>Təchizatçı:</strong> ${techizatci ? techizatci.ad : '-'}</p>
+      <p class="text-sm"><strong>Tarix:</strong> ${formatTarix(qaime.tarix)}</p>
+      </div>
+      <h4 class="font-semibold mb-3 text-orange-700"><i class="fas fa-info-circle"></i> Qaytarılacaq məhsulları seçin:</h4>
+      <p class="text-xs text-gray-600 mb-3">Qeyd: Yalnız anbarda mövcud olan məhsullar qaytarıla bilər.</p>
+      <div class="space-y-2" id="qaytarma-mehsullar">`;
+
+        let availableProducts = 0;
+        qaime.mehsullar.forEach((m, index) => {
+          // Anbarda bu məhsulun cari qalığını tap
+          const anbarMal = DATA.anbar.find(
+            (a) => a.mal_kod === m.mal_kod && a.reng_id === m.reng_id && a.olcu_id === m.olcu_id,
+          );
+
+          const qaliq = anbarMal ? anbarMal.qaliq : 0;
+
+          // Artıq qaytarılmış miqdarı yoxla
+          let qaytarilanMiqdar = 0;
+          if (qaime.qaytarmalar && qaime.qaytarmalar.length > 0) {
+            qaime.qaytarmalar.forEach((qr) => {
+              if (
+                qr.mal_kod === m.mal_kod &&
+                qr.reng_id === m.reng_id &&
+                qr.olcu_id === m.olcu_id
+              ) {
+                qaytarilanMiqdar += qr.miqdar;
+              }
+            });
+          }
+
+          const qaytarilaBiler = qaliq - qaytarilanMiqdar;
+
+          if (qaytarilaBiler > 0) {
+            availableProducts++;
+            html += `
+      <div class="border rounded-lg p-3 bg-gray-50">
+      <div class="flex justify-between items-start mb-2">
+      <div class="flex-1">
+      <p class="font-medium">${m.mal_adi}</p>
+      <p class="text-xs text-gray-600">${m.mal_kod} | ${m.nov_adi} | ${m.reng_adi || '-'} | ${m.olcu_adi}</p>
+      </div>
+      <label class="flex items-center gap-2">
+      <input type="checkbox" class="techizatci-qaytarma-check w-4 h-4" data-index="${index}">
+      <span class="text-sm">Qaytarılsın</span>
+      </label>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-sm">
+      <div>
+      <span class="text-gray-600">Daxil olan:</span>
+      <span class="font-semibold ml-1">${m.miqdar}</span>
+      </div>
+      <div>
+      <span class="text-gray-600">Anbarda:</span>
+      <span class="font-semibold ml-1">${qaliq}</span>
+      </div>
+      <div>
+      <span class="text-gray-600">Qaytarılar:</span>
+      <span class="font-semibold ml-1 text-orange-600">${qaytarilaBiler}</span>
+      </div>
+      </div>
+      <div class="mt-2 hidden" id="qaytarma-detallar-${index}">
+      <label class="block text-sm text-gray-700 mb-1">Qaytarılacaq miqdar (max: ${qaytarilaBiler}):</label>
+      <input type="number" min="1" max="${qaytarilaBiler}" value="${qaytarilaBiler}"
+      class="w-full px-3 py-2 border rounded-lg techizatci-qaytarma-miqdar" data-index="${index}">
+      <label class="block text-sm text-gray-700 mb-1 mt-2">Qaytarma Səbəbi:</label>
+      <textarea class="w-full px-3 py-2 border rounded-lg techizatci-qaytarma-sebeb text-sm" rows="2" data-index="${index}" placeholder="Məs: Defektli, uyğunsuzluq..."></textarea>
+      </div>
+      </div>`;
+          }
+        });
+
+        if (availableProducts === 0) {
+          html += `<div class="bg-yellow-50 border border-yellow-200 p-6 text-center rounded-lg">
+      <p class="text-yellow-800 font-semibold"><i class="fas fa-exclamation-triangle"></i> Qaytarıla biləcək məhsul yoxdur</p>
+      <p class="text-sm text-yellow-600 mt-2">Bütün məhsullar ya satılıb, ya da artıq qaytarılıb.</p>
+      </div>`;
+        }
+
+        html += `
+      </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+      <button onclick="techizatciyaQaytarmaniTamamla(${qaimeId})" class="flex-1 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700">
+      <i class="fas fa-check"></i> Qaytarmanı Tamamla
+      </button>
+      <button onclick="modalBagla('modal-techizatci-qaytarma')" class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700">
+      İmtina
+      </button>
+      </div>
+      `;
+
+        document.getElementById('techizatci-qaytarma-content').innerHTML = html;
+        document.getElementById('modal-techizatci-qaytarma').classList.remove('hidden');
+
+        // Checkbox event listener
+        document.querySelectorAll('.techizatci-qaytarma-check').forEach((cb) => {
+          cb.addEventListener('change', function () {
+            const index = this.dataset.index;
+            const detallar = document.getElementById(`qaytarma-detallar-${index}`);
+            if (this.checked) {
+              detallar.classList.remove('hidden');
+            } else {
+              detallar.classList.add('hidden');
+            }
+          });
+        });
+      }
+
+      function techizatciyaQaytarmaniTamamla(qaimeId) {
+        const qaime = DATA.qaimeler.find((q) => q.id === qaimeId);
+        if (!qaime) return;
+
+        const secilenler = [];
+        document.querySelectorAll('.techizatci-qaytarma-check:checked').forEach((cb) => {
+          const index = parseInt(cb.dataset.index);
+          const miqdarInput = document.querySelector(
+            `.techizatci-qaytarma-miqdar[data-index="${index}"]`,
+          );
+          const sebebInput = document.querySelector(
+            `.techizatci-qaytarma-sebeb[data-index="${index}"]`,
+          );
+
+          const mehsul = qaime.mehsullar[index];
+          const miqdar = parseInt(miqdarInput.value);
+
+          // Anbarda kifayət qədər mal var?
+          const anbarMal = DATA.anbar.find(
+            (a) =>
+              a.mal_kod === mehsul.mal_kod &&
+              a.reng_id === mehsul.reng_id &&
+              a.olcu_id === mehsul.olcu_id,
+          );
+
+          if (!anbarMal || anbarMal.qaliq < miqdar) {
+            alert(`Kifayət qədər mal yoxdur: ${mehsul.mal_adi}`);
+            return;
+          }
+
+          secilenler.push({
+            mehsul: mehsul,
+            miqdar: miqdar,
+            sebeb: sebebInput.value.trim(),
+            anbar_id: anbarMal.id,
+          });
+        });
+
+        if (secilenler.length === 0) {
+          alert('Ən azı bir məhsul seçin!');
+          return;
+        }
+
+        let umumiQaytarmaMebleg = 0;
+
+        // Qaytarmaları qeyd et
+        secilenler.forEach((s) => {
+          const qaytarmaMebleg = s.mehsul.alis_qiymeti * s.miqdar;
+          umumiQaytarmaMebleg += qaytarmaMebleg;
+
+          // Qaiməyə qaytarma məlumatını əlavə et
+          if (!qaime.qaytarmalar) {
+            qaime.qaytarmalar = [];
+          }
+
+          qaime.qaytarmalar.push({
+            id: Date.now() + Math.random(),
+            mehsul_index: qaime.mehsullar.indexOf(s.mehsul),
+            mal_id: s.anbar_id,
+            mal_kod: s.mehsul.mal_kod,
+            mal_adi: s.mehsul.mal_adi,
+            nov_id: s.mehsul.nov_id,
+            nov_adi: s.mehsul.nov_adi,
+            reng_id: s.mehsul.reng_id,
+            reng_adi: s.mehsul.reng_adi,
+            olcu_id: s.mehsul.olcu_id,
+            olcu_adi: s.mehsul.olcu_adi,
+            miqdar: s.miqdar,
+            vahid_qiymet: s.mehsul.alis_qiymeti,
+            mebleg: qaytarmaMebleg,
+            sebeb: s.sebeb,
+            tarix: new Date().toISOString(),
+          });
+
+          // Anbardan çıx
+          const anbarMal = DATA.anbar.find((a) => a.id === s.anbar_id);
+          if (anbarMal) {
+            anbarMal.qaliq -= s.miqdar;
+
+            // Əgər qalıq 0 olarsa, məhsulu sil
+            if (anbarMal.qaliq === 0) {
+              // Məhsulu silmək əvəzinə qalığı 0 olaraq saxla
+              // DATA.anbar = DATA.anbar.filter(a => a.id !== s.anbar_id);
+            }
+          }
+        });
+
+        saveData();
+
+        alert(`<i class="fas fa-check-circle"></i> ${secilenler.length} məhsul uğurla təchizatçıya qaytarıldı!
+      <i class="fas fa-money-bill-wave"></i> Qaytarılan məbləğ: ${formatMebleg(umumiQaytarmaMebleg)}`);
+
+        modalBagla('modal-techizatci-qaytarma');
+        daxilolmaTarixceFilter();
+        anbarYenile();
+      }
+
+      window.addEventListener('DOMContentLoaded', init);
+
+      // Handle window resize
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const sidebar = document.getElementById('sidebar');
+          const overlay = document.getElementById('sidebarOverlay');
+          if (window.innerWidth > 768) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+          }
+        }, 250);
+      });
+
+      // ============================================
+      // BARKOD SİSTEMİ
+      // ============================================
+      function barkodEnterYoxla(event, modul) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          if (modul === 'daxil') {
+            barkodOxuDaxil();
+          } else if (modul === 'satis') {
+            barkodOxuSatis();
+          }
+        }
+      }
+
+      function barkodOxuDaxil() {
+        const barkod = document.getElementById('yeni-mal-barkod').value.trim();
+        if (!barkod) return;
+        const mevcudMal = DATA.anbar.find((m) => m.mal_kod === barkod);
+        if (mevcudMal) {
+          document.getElementById('yeni-mal-ad').value = mevcudMal.mal_adi;
+          document.getElementById('yeni-mal-nov').value = mevcudMal.nov_id;
+          if (mevcudMal.reng_id) document.getElementById('yeni-mal-reng').value = mevcudMal.reng_id;
+          if (mevcudMal.olcu_id) document.getElementById('yeni-mal-olcu').value = mevcudMal.olcu_id;
+          document.getElementById('yeni-mal-alis').value = mevcudMal.alis_qiymeti;
+          document.getElementById('yeni-mal-satis').value = mevcudMal.satis_qiymeti;
+          document.getElementById('yeni-mal-miqdar').focus();
+          showToast(
+            '<i class="fas fa-check-circle"></i> Məhsul tapıldı: ' + mevcudMal.mal_adi,
+            'success',
+          );
+        } else {
+          document.getElementById('yeni-mal-ad').focus();
+          showToast(
+            '<i class="fas fa-info-circle"></i> Yeni məhsul - məlumatları doldurun',
+            'info',
+          );
+        }
+      }
+
+      function barkodOxuSatis() {
+        const barkod = document.getElementById('satis-axtar').value.trim();
+        if (!barkod) return;
+        const mal = DATA.anbar.find((m) => m.mal_kod === barkod && m.qaliq > 0);
+        if (mal) {
+          sebeteElave(mal.id);
+          document.getElementById('satis-axtar').value = '';
+          showToast(
+            '<i class="fas fa-check-circle"></i> ' + mal.mal_adi + ' səbətə əlavə edildi',
+            'success',
+          );
+        } else {
+          showToast(
+            '<i class="fas fa-times-circle"></i> Məhsul tapılmadı və ya stokda yoxdur',
+            'error',
+          );
+        }
+      }
+
+      function showToast(message, type = 'info') {
+        const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
+        const toast = document.createElement('div');
+        toast.className = `fixed top-20 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      // ============================================
+      // Z HESABAT
+      // ============================================
+      function zHesabatInit() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('z-baslama').value = today;
+        document.getElementById('z-bitme').value = today;
+      }
+
+      function zHesabatYarat() {
+        const baslama = document.getElementById('z-baslama').value;
+        const bitme = document.getElementById('z-bitme').value;
+        if (!baslama || !bitme) {
+          alert('Tarix aralığını seçin!');
+          return;
+        }
+        const satislar = DATA.satislar.filter(
+          (s) => s.tarix >= baslama && s.tarix <= bitme + 'T23:59:59',
+        );
+        if (satislar.length === 0) {
+          alert('Bu tarix aralığında satış tapılmadı!');
+          return;
+        }
+        let umumiSatis = 0,
+          umumiEndirim = 0,
+          umumiQaytarma = 0;
+        let naqdOdenis = 0,
+          kartOdenis = 0,
+          kocurmeOdenis = 0,
+          umumiMenfeet = 0;
+        const mehsulSatislari = {};
+        satislar.forEach((s) => {
+          const ilkinYekun =
+            s.yekun_mebleg +
+            (s.qaytarmalar ? s.qaytarmalar.reduce((sum, q) => sum + q.toplam_mebleg, 0) : 0);
+          umumiSatis += ilkinYekun;
+          umumiEndirim += s.umumi_endirim || 0;
+          if (s.qaytarmalar) {
+            s.qaytarmalar.forEach((q) => {
+              umumiQaytarma += q.toplam_mebleg;
+            });
+          }
+          if (s.odenis_nov === 'Nağd') naqdOdenis += s.yekun_mebleg;
+          else if (s.odenis_nov === 'Kart') kartOdenis += s.yekun_mebleg;
+          else if (s.odenis_nov === 'Köçürmə') kocurmeOdenis += s.yekun_mebleg;
+          umumiMenfeet += s.menfeet;
+          s.mehsullar.forEach((m) => {
+            if (!mehsulSatislari[m.mal_adi]) mehsulSatislari[m.mal_adi] = { miqdar: 0, mebleg: 0 };
+            mehsulSatislari[m.mal_adi].miqdar += m.miqdar;
+            mehsulSatislari[m.mal_adi].mebleg += m.yekun_mebleg;
+          });
+        });
+        const qaytarmalar = DATA.qaytarmalar.filter(
+          (q) => q.tarix >= baslama && q.tarix <= bitme + 'T23:59:59',
+        );
+        const xercler = DATA.xercler.filter((x) => x.tarix >= baslama && x.tarix <= bitme);
+        const umumiXerc = xercler.reduce((sum, x) => sum + x.mebleg, 0);
+        const xalisGelir = umumiMenfeet - umumiXerc;
+        const xalisSatis = umumiSatis - umumiEndirim - umumiQaytarma;
+
+        // Sadə PDF formatı
+        let html = `
+      <div class="text-center mb-6">
+      <h2 class="text-3xl font-bold mb-2">${DATA.magazaMelumat.ad}</h2>
+      <p class="text-sm">${DATA.magazaMelumat.unvan}</p>
+      <p class="text-sm mb-4">${DATA.magazaMelumat.telefon}</p>
+      <div class="border-t-2 border-b-2 py-2 mb-4">
+      <h3 class="text-2xl font-bold">Z HESABAT</h3>
+      <p class="text-sm">${formatTarix(baslama)} - ${formatTarix(bitme)}</p>
+      </div>
+      </div>
+
+      <table class="w-full text-sm mb-4">
+      <thead>
+      <tr class="bg-gray-200">
+      <th class="px-3 py-2 text-left">Göstərici</th>
+      <th class="px-3 py-2 text-right">Məbləğ</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr class="border-b">
+      <td class="px-3 py-2">Satış sayı</td>
+      <td class="px-3 py-2 text-right font-semibold">${satislar.length}</td>
+      </tr>
+      <tr class="border-b">
+      <td class="px-3 py-2">Ümumi satış</td>
+      <td class="px-3 py-2 text-right">${formatMebleg(umumiSatis)}</td>
+      </tr>
+      <tr class="border-b">
+      <td class="px-3 py-2">Endirim</td>
+      <td class="px-3 py-2 text-right text-red-600">-${formatMebleg(umumiEndirim)}</td>
+      </tr>
+      <tr class="border-b">
+      <td class="px-3 py-2">Qaytarma</td>
+      <td class="px-3 py-2 text-right text-red-600">-${formatMebleg(umumiQaytarma)}</td>
+      </tr>
+      <tr class="border-b bg-blue-100 font-bold">
+      <td class="px-3 py-2">XALİS SATIŞ</td>
+      <td class="px-3 py-2 text-right">${formatMebleg(xalisSatis)}</td>
+      </tr>
+      <tr class="border-b">
+      <td class="px-3 py-2">Mənfəət</td>
+      <td class="px-3 py-2 text-right text-green-600">${formatMebleg(umumiMenfeet)}</td>
+      </tr>
+      <tr class="border-b">
+      <td class="px-3 py-2">Xərc</td>
+      <td class="px-3 py-2 text-right text-red-600">-${formatMebleg(umumiXerc)}</td>
+      </tr>
+      <tr class="bg-green-100 font-bold">
+      <td class="px-3 py-2">XALİS GƏLİR</td>
+      <td class="px-3 py-2 text-right text-green-700">${formatMebleg(xalisGelir)}</td>
+      </tr>
+      </tbody>
+      </table>
+
+      <div class="grid grid-cols-3 gap-4 mb-4">
+      <div class="border p-3 text-center">
+      <p class="text-xs text-gray-600 mb-1">Nağd</p>
+      <p class="text-lg font-bold">${formatMebleg(naqdOdenis)}</p>
+      </div>
+      <div class="border p-3 text-center">
+      <p class="text-xs text-gray-600 mb-1">Kart</p>
+      <p class="text-lg font-bold">${formatMebleg(kartOdenis)}</p>
+      </div>
+      <div class="border p-3 text-center">
+      <p class="text-xs text-gray-600 mb-1">Köçürmə</p>
+      <p class="text-lg font-bold">${formatMebleg(kocurmeOdenis)}</p>
+      </div>
+      </div>
+
+      <div class="border-t pt-4">
+      <p class="text-xs text-center text-gray-500">Hesabat tarixi: ${formatTarix(new Date().toISOString(), true)}</p>
+      </div>
+      `;
+
+        document.getElementById('z-hesabat-content').innerHTML = html;
+        document.getElementById('z-hesabat-content').classList.remove('hidden');
+      }
+
+      function zHesabatCap() {
+        window.print();
+      }
+    </script>
+  </body>
+</html>
