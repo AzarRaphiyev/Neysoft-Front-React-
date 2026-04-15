@@ -23,18 +23,18 @@ function SatisTarixce() {
   const handleExport = () => {
     const ws_data = [
       [
-        'Q\u0259bz Kodu',
+        'Qəbz Kodu',
         'Barkod',
-        'Mal\u0131n Ad\u0131',
-        'Sat\u0131lan Miqdar',
-        'Al\u0131\u015F M\u0259bl\u0259\u011Fi',
-        'Sat\u0131\u015F M\u0259bl\u0259\u011Fi',
-        'M\u0259hsul Endirimi',
-        'Q\u0259bz Endirimi',
-        'Qaytar\u0131lan Miqdar',
-        'Qaytar\u0131lan M\u0259bl\u0259\u011F',
+        'Malın Adı',
+        'Satılan Miqdar',
+        'Alış Məbləği',
+        'Satış Məbləği',
+        'Məhsul Endirimi',
+        'Qəbz Endirimi',
+        'Qaytarılan Miqdar',
+        'Qaytarılan Məbləğ',
         'Status',
-        'C\u0259m',
+        'Cəm',
         'Net Miqdar',
       ],
     ];
@@ -61,7 +61,7 @@ function SatisTarixce() {
 
         let status = 'Aktiv';
         if (qaytarilanMiqdar > 0 && qaytarilanMiqdar < m.miqdar) {
-          status = 'Qism\u0259n Qaytarma';
+          status = 'Qismən Qaytarma';
         } else if (qaytarilanMiqdar === m.miqdar) {
           status = 'Tam Qaytarma';
         }
@@ -115,7 +115,7 @@ function SatisTarixce() {
       { wch: 12 },
     ];
     ws['!cols'] = wscols;
-    XLSX.utils.book_append_sheet(wb, ws, 'Sat\u0131\u015F Tarix\u00E7\u0259si');
+    XLSX.utils.book_append_sheet(wb, ws, 'Satış Tarixçəsi');
     XLSX.writeFile(wb, `satis_tarixcesi_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
@@ -123,7 +123,7 @@ function SatisTarixce() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold text-gray-800">
-          <i className="fas fa-history"></i> Sat\u0131\u015F Tarix\u00E7\u0259si
+          <i className="fas fa-history"></i> Satış Tarixçəsi
         </h2>
         <button
           onClick={handleExport}
@@ -137,7 +137,7 @@ function SatisTarixce() {
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm mb-2">Ba\u015Flama Tarixi</label>
+            <label className="block text-sm mb-2">Başlama Tarixi</label>
             <input
               type="date"
               value={baslama}
@@ -146,7 +146,7 @@ function SatisTarixce() {
             />
           </div>
           <div>
-            <label className="block text-sm mb-2">Bitm\u0259 Tarixi</label>
+            <label className="block text-sm mb-2">Bitmə Tarixi</label>
             <input
               type="date"
               value={bitme}
@@ -168,21 +168,21 @@ function SatisTarixce() {
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left">Q\u0259bz \u2116</th>
+                <th className="px-4 py-3 text-left">Qəbz №</th>
                 <th className="px-4 py-3 text-left">Tarix</th>
-                <th className="px-4 py-3 text-left">M\u00FC\u015Ft\u0259ri</th>
-                <th className="px-4 py-3 text-right">M\u0259bl\u0259\u011F</th>
+                <th className="px-4 py-3 text-left">Müştəri</th>
+                <th className="px-4 py-3 text-right">Məbləğ</th>
                 <th className="px-4 py-3 text-right">Endirim</th>
                 <th className="px-4 py-3 text-right">Yekun</th>
-                <th className="px-4 py-3 text-left">\u00D6d\u0259ni\u015F</th>
-                <th className="px-4 py-3 text-center">\u0258m\u0259liyyat</th>
+                <th className="px-4 py-3 text-left">Ödəniş</th>
+                <th className="px-4 py-3 text-center">Əməliyyat</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
-                    Sat\u0131\u015F tap\u0131lmad\u0131
+                    Satış tapılmadı
                   </td>
                 </tr>
               ) : (
@@ -222,7 +222,7 @@ function SatisTarixce() {
                             openModal('qebz');
                           }}
                           className="text-green-600 hover:text-green-800"
-                          title="Q\u0259bz"
+                          title="Qəbz"
                         >
                           <i className="fas fa-print"></i>
                         </button>
@@ -240,38 +240,38 @@ function SatisTarixce() {
       <Modal
         isOpen={ui.activeModal === 'satisDetay'}
         onClose={() => ui.closeModal()}
-        title="Sat\u0131\u015F Detallar\u0131"
+        title="Satış Detalları"
       >
         {selectedSatis && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <strong>Q\u0259bz \u2116:</strong> {selectedSatis.qebz_nomre}
+                <strong>Qəbz №:</strong> {selectedSatis.qebz_nomre}
               </div>
               <div>
                 <strong>Tarix:</strong> {new Date(selectedSatis.tarix).toLocaleString('az-AZ')}
               </div>
               <div>
-                <strong>M\u00FC\u015Ft\u0259ri:</strong> {selectedSatis.musteri_ad || '-'}
+                <strong>Müştəri:</strong> {selectedSatis.musteri_ad || '-'}
               </div>
               <div>
                 <strong>Telefon:</strong> {selectedSatis.musteri_tel || '-'}
               </div>
               <div>
-                <strong>\u00D6d\u0259ni\u015F:</strong> {selectedSatis.odenis_nov}
+                <strong>Ödəniş:</strong> {selectedSatis.odenis_nov}
               </div>
               <div>
-                <strong>M\u0259nf\u0259\u0259t:</strong> {formatMebleg(selectedSatis.menfeet)}
+                <strong>Mənfəət:</strong> {formatMebleg(selectedSatis.menfeet)}
               </div>
             </div>
             <div className="border-t pt-4">
-              <h4 className="font-semibold mb-3">M\u0259hsullar:</h4>
+              <h4 className="font-semibold mb-3">Məhsullar:</h4>
               <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-3 py-2 text-left">M\u0259hsul</th>
+                    <th className="px-3 py-2 text-left">Məhsul</th>
                     <th className="px-3 py-2 text-right">Miqdar</th>
-                    <th className="px-3 py-2 text-right">Qiym\u0259t</th>
+                    <th className="px-3 py-2 text-right">Qiymət</th>
                     <th className="px-3 py-2 text-right">Endirim</th>
                     <th className="px-3 py-2 text-right">Yekun</th>
                   </tr>
@@ -311,20 +311,20 @@ function SatisTarixce() {
       <Modal
         isOpen={ui.activeModal === 'qebz'}
         onClose={() => ui.closeModal()}
-        title="Q\u0259bz"
+        title="Qəbz"
         footer={
           <div className="flex gap-3">
             <button
               onClick={() => window.print()}
               className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
             >
-              <i className="fas fa-print"></i> \u00C7ap Et
+              <i className="fas fa-print"></i> Çap Et
             </button>
             <button
               onClick={() => ui.closeModal()}
               className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700"
             >
-              Ba\u011Fla
+              Bağla
             </button>
           </div>
         }
@@ -337,7 +337,7 @@ function SatisTarixce() {
               <p className="text-sm text-gray-600">Tel: {data.magazaMelumat.telefon}</p>
               <div className="border-t border-b py-3 my-3">
                 <p className="text-sm">
-                  <strong>Q\u0259bz \u2116:</strong> {selectedSatis.qebz_nomre}
+                  <strong>Qəbz №:</strong> {selectedSatis.qebz_nomre}
                 </p>
                 <p className="text-sm">
                   <strong>Tarix:</strong> {new Date(selectedSatis.tarix).toLocaleString('az-AZ')}
@@ -346,8 +346,8 @@ function SatisTarixce() {
               <table className="w-full text-sm mb-3">
                 <thead className="border-b">
                   <tr>
-                    <th className="text-left py-1">M\u0259hsul</th>
-                    <th className="text-right py-1">Qiym\u0259t</th>
+                    <th className="text-left py-1">Məhsul</th>
+                    <th className="text-right py-1">Qiymət</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -373,7 +373,7 @@ function SatisTarixce() {
                   <span>{formatMebleg(selectedSatis.yekun_mebleg)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>\u00D6d\u0259ni\u015F:</span>
+                  <span>Ödəniş:</span>
                   <span>{selectedSatis.odenis_nov}</span>
                 </div>
               </div>

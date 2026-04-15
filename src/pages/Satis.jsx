@@ -225,16 +225,16 @@ function Satis() {
   return (
     <div>
       <h2 className="text-3xl font-bold text-gray-800 mb-6">
-        <i className="fas fa-shopping-cart"></i> Yeni Sat\u0131\u015F
+        <i className="fas fa-shopping-cart"></i> Yeni Satış
       </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2">
-          {/* M\u00FC\u015Ft\u0259ri M\u0259lumatlar\u0131 */}
+          {/* Müştəri Məlumatları */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
             <h3 className="text-lg font-semibold mb-4">
-              M\u00FC\u015Ft\u0259ri M\u0259lumatlar\u0131
+              Müştəri Məlumatları
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
@@ -242,7 +242,7 @@ function Satis() {
                 value={musteriAd}
                 onChange={(e) => setMusteriAd(e.target.value)}
                 className="px-4 py-2 border rounded-lg"
-                placeholder="M\u00FC\u015Ft\u0259ri ad\u0131"
+                placeholder="Müştəri adı"
               />
               <input
                 type="tel"
@@ -254,19 +254,19 @@ function Satis() {
             </div>
           </div>
 
-          {/* M\u0259hsul Axtar */}
+          {/* Məhsul Axtar */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-4">M\u0259hsul Se\u00E7</h3>
+            <h3 className="text-lg font-semibold mb-4">Məhsul Seç</h3>
             <input
               type="text"
               value={axtar}
               onChange={(e) => setAxtar(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg mb-4"
-              placeholder="Barkod v\u0259 ya mal ad\u0131 ilə axtar..."
+              placeholder="Barkod və ya mal adı ilə axtar..."
             />
             <div className="grid gap-2 max-h-96 overflow-y-auto">
               {filteredMehsullar.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">M\u0259hsul tap\u0131lmad\u0131</p>
+                <p className="text-gray-500 text-center py-4">Məhsul tapılmadı</p>
               ) : (
                 filteredMehsullar.map((m) => (
                   <div
@@ -278,7 +278,7 @@ function Satis() {
                       <div>
                         <h4 className="font-semibold">{m.mal_adi}</h4>
                         <p className="text-sm text-gray-600">
-                          {m.mal_kod} \u2022 {m.nov_adi}
+                          {m.mal_kod} • {m.nov_adi}
                           {m.reng_kod && (
                             <span
                               className="inline-block w-4 h-4 rounded border align-middle ml-1"
@@ -286,12 +286,12 @@ function Satis() {
                             ></span>
                           )}
                           {m.reng_adi && ` ${m.reng_adi}`}
-                          {m.olcu_adi && ` \u2022 ${m.olcu_adi}`}
+                          {m.olcu_adi && ` • ${m.olcu_adi}`}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-blue-600">{formatMebleg(m.satis_qiymeti)}</p>
-                        <p className="text-xs text-gray-600">Qal\u0131q: {m.qaliq}</p>
+                        <p className="text-xs text-gray-600">Qalıq: {m.qaliq}</p>
                       </div>
                     </div>
                   </div>
@@ -305,11 +305,11 @@ function Satis() {
         <div>
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-6">
             <h3 className="text-lg font-semibold mb-4">
-              <i className="fas fa-shopping-cart"></i> S\u0259b\u0259t
+              <i className="fas fa-shopping-cart"></i> Səbət
             </h3>
 
             {sebet.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">S\u0259b\u0259t bo\u015Fdur</p>
+              <p className="text-gray-500 text-center py-8">Səbət boşdur</p>
             ) : (
               <>
                 <div className="mb-4 max-h-96 overflow-y-auto">
@@ -338,7 +338,7 @@ function Satis() {
                                 ></span>
                               )}
                               {item.reng_adi && ` ${item.reng_adi}`}
-                              {item.olcu_adi && ` \u2022 ${item.olcu_adi}`}
+                              {item.olcu_adi && ` • ${item.olcu_adi}`}
                             </p>
                             <p className="text-xs text-blue-600 font-semibold">
                               {formatMebleg(item.satis_qiymeti)}
@@ -383,7 +383,7 @@ function Satis() {
                           >
                             <option value="">Endirim yoxdur</option>
                             <option value="faiz">% Endirim</option>
-                            <option value="mebleg">\u20BC Endirim</option>
+                            <option value="mebleg">₼ Endirim</option>
                           </select>
                           {item.endirim_tipi && (
                             <input
@@ -410,7 +410,7 @@ function Satis() {
                 {/* Totals */}
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between">
-                    <span>Ara C\u0259mi:</span>
+                    <span>Ara Cəmi:</span>
                     <span>{formatMebleg(hesaplamalar.araCemi)}</span>
                   </div>
                   <div className="flex justify-between text-red-600">
@@ -418,10 +418,10 @@ function Satis() {
                     <span>{formatMebleg(hesaplamalar.toplamEndirim)}</span>
                   </div>
 
-                  {/* \u00DCmumi Q\u0259bz Endirimi */}
+                  {/* Ümumi Qəbz Endirimi */}
                   <div className="border-t pt-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      \u00DCmumi Q\u0259bz Endirimi
+                      Ümumi Qəbz Endirimi
                     </label>
                     <div className="flex gap-2">
                       <select
@@ -437,7 +437,7 @@ function Satis() {
                       >
                         <option value="">Yoxdur</option>
                         <option value="faiz">% Endirim</option>
-                        <option value="mebleg">\u20BC Endirim</option>
+                        <option value="mebleg">₼ Endirim</option>
                       </select>
                       <input
                         type="number"
@@ -468,9 +468,9 @@ function Satis() {
                   onChange={(e) => setOdenisNov(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg my-4"
                 >
-                  <option value="Na\u011Fd">Na\u011Fd</option>
+                  <option value="Nağd">Nağd</option>
                   <option value="Kart">Kart</option>
-                  <option value="K\u00F6\u00E7\u00FCrm\u0259">K\u00F6\u00E7\u00FCrm\u0259</option>
+                  <option value="Köçürmə">Köçürmə</option>
                 </select>
 
                 <button
@@ -478,7 +478,7 @@ function Satis() {
                   disabled={sebet.length === 0}
                   className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <i className="fas fa-check"></i> Sat\u0131\u015F\u0131 Tamamla
+                  <i className="fas fa-check"></i> Satışı Tamamla
                 </button>
               </>
             )}
@@ -490,20 +490,20 @@ function Satis() {
       <Modal
         isOpen={ui.activeModal === 'qebz'}
         onClose={() => ui.closeModal()}
-        title="Q\u0259bz"
+        title="Qəbz"
         footer={
           <div className="flex gap-3">
             <button
               onClick={() => window.print()}
               className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
             >
-              <i className="fas fa-print"></i> \u00C7ap Et
+              <i className="fas fa-print"></i> Çap Et
             </button>
             <button
               onClick={() => ui.closeModal()}
               className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700"
             >
-              Ba\u011Fla
+              Bağla
             </button>
           </div>
         }
@@ -516,22 +516,22 @@ function Satis() {
               <p className="text-sm text-gray-600">Tel: {data.magazaMelumat.telefon}</p>
               <div className="border-t border-b py-3 my-3">
                 <p className="text-sm">
-                  <strong>Q\u0259bz \u2116:</strong> {ui.modalData.qebz_nomre}
+                  <strong>Qəbz №:</strong> {ui.modalData.qebz_nomre}
                 </p>
                 <p className="text-sm">
                   <strong>Tarix:</strong> {new Date(ui.modalData.tarix).toLocaleString('az-AZ')}
                 </p>
                 {ui.modalData.musteri_ad && (
                   <p className="text-sm">
-                    <strong>M\u00FC\u015Ft\u0259ri:</strong> {ui.modalData.musteri_ad}
+                    <strong>Müştəri:</strong> {ui.modalData.musteri_ad}
                   </p>
                 )}
               </div>
               <table className="w-full text-sm mb-3">
                 <thead className="border-b">
                   <tr>
-                    <th className="text-left py-1">M\u0259hsul</th>
-                    <th className="text-right py-1">Qiym\u0259t</th>
+                    <th className="text-left py-1">Məhsul</th>
+                    <th className="text-right py-1">Qiymət</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -553,7 +553,7 @@ function Satis() {
               </table>
               <div className="border-t pt-3 space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span>Ara C\u0259mi:</span>
+                  <span>Ara Cəmi:</span>
                   <span>{formatMebleg(ui.modalData.umumi_mebleg)}</span>
                 </div>
                 {ui.modalData.umumi_endirim > 0 && (
@@ -567,7 +567,7 @@ function Satis() {
                   <span>{formatMebleg(ui.modalData.yekun_mebleg)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>\u00D6d\u0259ni\u015F:</span>
+                  <span>Ödəniş:</span>
                   <span>{ui.modalData.odenis_nov}</span>
                 </div>
               </div>

@@ -23,13 +23,13 @@ function MalDaxil() {
 
   const handleMehsulElave = () => {
     const errors = [];
-    if (!barkod && !malAd) errors.push('Barkod v\u0259 ya mal\u0131n ad\u0131');
-    if (!malAd) errors.push('Mal\u0131n ad\u0131');
-    if (!novId) errors.push('N\u00F6v');
-    if (!olcuId) errors.push('\u00D6l\u00E7\u00FC');
+    if (!barkod && !malAd) errors.push('Barkod və ya malın adı');
+    if (!malAd) errors.push('Malın adı');
+    if (!novId) errors.push('Növ');
+    if (!olcuId) errors.push('Ölçü');
     if (!miqdar || parseInt(miqdar) <= 0) errors.push('Miqdar');
-    if (!alisQiymeti || parseFloat(alisQiymeti) <= 0) errors.push('Al\u0131\u015F qiym\u0259ti');
-    if (!satisQiymeti || parseFloat(satisQiymeti) <= 0) errors.push('Sat\u0131\u015F qiym\u0259ti');
+    if (!alisQiymeti || parseFloat(alisQiymeti) <= 0) errors.push('Alış qiyməti');
+    if (!satisQiymeti || parseFloat(satisQiymeti) <= 0) errors.push('Satış qiyməti');
 
     if (errors.length > 0) {
       showToast('Zəhmət olmasa bu xanaları doldurun:\n' + errors.join(', '), 'warning');
@@ -105,13 +105,13 @@ function MalDaxil() {
         <i className="fas fa-plus"></i> Mal Daxil Et
       </h2>
 
-      {/* Qaim\u0259 M\u0259lumatlar\u0131 */}
+      {/* Qaimə Məlumatları */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4">Qaim\u0259 M\u0259lumatlar\u0131</h3>
+        <h3 className="text-xl font-semibold mb-4">Qaimə Məlumatları</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Qaim\u0259 Kodu *
+              Qaimə Kodu *
             </label>
             <input
               type="text"
@@ -123,14 +123,14 @@ function MalDaxil() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              T\u0259chizat\u00E7\u0131
+              Təchizatçı
             </label>
             <select
               value={qaimeTechizatci}
               onChange={(e) => setQaimeTechizatci(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
             >
-              <option value="">Se\u00E7in</option>
+              <option value="">Seçin</option>
               {data.techizatcilar.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.ad}
@@ -152,9 +152,9 @@ function MalDaxil() {
         </div>
       </div>
 
-      {/* M\u0259hsul \u0258lav\u0259 Et */}
+      {/* Məhsul Əlavə Et */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4">M\u0259hsul \u0258lav\u0259 Et</h3>
+        <h3 className="text-xl font-semibold mb-4">Məhsul Əlavə Et</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
           <input
             type="text"
@@ -168,14 +168,14 @@ function MalDaxil() {
             value={malAd}
             onChange={(e) => setMalAd(e.target.value)}
             className="px-4 py-2 border rounded-lg"
-            placeholder="Mal\u0131n Ad\u0131 *"
+            placeholder="Malın Adı *"
           />
           <select
             value={novId}
             onChange={(e) => setNovId(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
-            <option value="">N\u00F6v\u00FC se\u00E7in...</option>
+            <option value="">Növü seçin...</option>
             {data.kateqoriyalar.map((k) => (
               <option key={k.id} value={k.id}>
                 {k.nov_adi}
@@ -187,7 +187,7 @@ function MalDaxil() {
             onChange={(e) => setRengId(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
-            <option value="">R\u0259ng se\u00E7in (ist\u0259y\u0259 bağlı)</option>
+            <option value="">Rəng seçin (istəyə bağlı)</option>
             {data.rengler.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.ad}
@@ -199,7 +199,7 @@ function MalDaxil() {
             onChange={(e) => setOlcuId(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
-            <option value="">\u00D6l\u00E7\u00FC se\u00E7in...</option>
+            <option value="">Ölçü seçin...</option>
             {data.olculer.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.ad}
@@ -219,7 +219,7 @@ function MalDaxil() {
             value={alisQiymeti}
             onChange={(e) => setAlisQiymeti(e.target.value)}
             className="px-4 py-2 border rounded-lg"
-            placeholder="Al\u0131\u015F Qiym\u0259ti *"
+            placeholder="Alış Qiyməti *"
             step="0.01"
           />
           <input
@@ -227,44 +227,44 @@ function MalDaxil() {
             value={satisQiymeti}
             onChange={(e) => setSatisQiymeti(e.target.value)}
             className="px-4 py-2 border rounded-lg"
-            placeholder="Sat\u0131\u015F Qiym\u0259ti *"
+            placeholder="Satış Qiyməti *"
             step="0.01"
           />
         </div>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
           <p className="text-sm text-blue-800">
-            <i className="fas fa-lightbulb"></i> <strong>\u0130pucu:</strong> Barkod oxuyucu ile
-            barkodu oxudun v\u0259 Enter bas\u0131n.
+            <i className="fas fa-lightbulb"></i> <strong>İpucu:</strong> Barkod oxuyucu ile
+            barkodu oxudun və Enter basın.
           </p>
         </div>
         <button
           onClick={handleMehsulElave}
           className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
         >
-          <i className="fas fa-plus"></i> M\u0259hsul \u0258lav\u0259 Et
+          <i className="fas fa-plus"></i> Məhsul Əlavə Et
         </button>
       </div>
 
-      {/* M\u0259hsul C\u0259dv\u0259l */}
+      {/* Məhsul Cədvəli */}
       {yeniMehsullar.length > 0 && (
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-xl font-semibold mb-4">
-            \u0258lav\u0259 Edilmi\u015F M\u0259hsullar
+            Əlavə Edilmiş Məhsullar
           </h3>
           <div className="overflow-x-auto mb-4">
             <table className="w-full">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-4 py-3 text-left">Barkod</th>
-                  <th className="px-4 py-3 text-left">Mal\u0131n Ad\u0131</th>
-                  <th className="px-4 py-3 text-left">N\u00F6v</th>
-                  <th className="px-4 py-3 text-left">R\u0259ng</th>
-                  <th className="px-4 py-3 text-left">\u00D6l\u00E7\u00FC</th>
+                  <th className="px-4 py-3 text-left">Malın Adı</th>
+                  <th className="px-4 py-3 text-left">Növ</th>
+                  <th className="px-4 py-3 text-left">Rəng</th>
+                  <th className="px-4 py-3 text-left">Ölçü</th>
                   <th className="px-4 py-3 text-right">Miqdar</th>
-                  <th className="px-4 py-3 text-right">Al\u0131\u015F Qiym\u0259ti</th>
-                  <th className="px-4 py-3 text-right">Sat\u0131\u015F Qiym\u0259ti</th>
-                  <th className="px-4 py-3 text-right">C\u0259mi</th>
-                  <th className="px-4 py-3 text-center">\u0258m\u0259liyyat</th>
+                  <th className="px-4 py-3 text-right">Alış Qiyməti</th>
+                  <th className="px-4 py-3 text-right">Satış Qiyməti</th>
+                  <th className="px-4 py-3 text-right">Cəmi</th>
+                  <th className="px-4 py-3 text-center">Əməliyyat</th>
                 </tr>
               </thead>
               <tbody>
@@ -308,9 +308,9 @@ function MalDaxil() {
               <tfoot className="bg-gray-50 font-bold">
                 <tr>
                   <td colSpan="6" className="px-4 py-3 text-right text-lg">
-                    \u00DCmumi M\u0259bl\u0259\u011F:
+                    Ümumi Məbləğ:
                   </td>
-                  <td className="px-4 py-3 text-right text-lg text-blue-600">
+                  <td colSpan="3" className="px-4 py-3 text-right text-lg text-blue-600">
                     {formatMebleg(umumiMebleg)}
                   </td>
                   <td></td>

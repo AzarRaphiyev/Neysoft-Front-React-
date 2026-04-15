@@ -34,7 +34,7 @@ function Parametrler() {
     setYeniKateqoriya('');
   };
 
-  // R\u0259ng
+  // Rəng
   const [yeniRngAd, setYeniRngAd] = useState('');
   const [yeniRngKod, setYeniRngKod] = useState('#ff0000');
   const handleRngElave = () => {
@@ -52,7 +52,7 @@ function Parametrler() {
     setYeniRngKod('#ff0000');
   };
 
-  // \u00D6l\u00E7\u00FC
+  // Ölçü
   const [yeniOlcuAd, setYeniOlcuAd] = useState('');
   const handleOlcuElave = () => {
     if (!yeniOlcuAd) {
@@ -68,7 +68,7 @@ function Parametrler() {
     setYeniOlcuAd('');
   };
 
-  // T\u0259chizat\u00E7\u0131
+  // Təchizatçı
   const [yeniTechizatciAd, setYeniTechizatciAd] = useState('');
   const [yeniTechizatciTel, setYeniTechizatciTel] = useState('');
   const handleTechizatciElave = () => {
@@ -82,7 +82,7 @@ function Parametrler() {
     setYeniTechizatciTel('');
   };
 
-  // Ma\u011Faza M\u0259lumat
+  // Mağaza Məlumat
   const [magazaAd, setMagazaAd] = useState(data.magazaMelumat.ad);
   const [magazaUnvan, setMagazaUnvan] = useState(data.magazaMelumat.unvan);
   const [magazaTel, setMagazaTel] = useState(data.magazaMelumat.telefon);
@@ -94,12 +94,12 @@ function Parametrler() {
   return (
     <div>
       <h2 className="text-3xl font-bold text-gray-800 mb-6">
-        <i className="fas fa-cog"></i> Parametrl\u0259r
+        <i className="fas fa-cog"></i> Parametrlər
       </h2>
 
       {/* Kateqoriyalar */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4">M\u0259hsul Kateqoriyalar\u0131</h3>
+        <h3 className="text-xl font-semibold mb-4">Məhsul Kateqoriyaları</h3>
         <div className="flex gap-4 mb-4">
           <input
             type="text"
@@ -112,7 +112,7 @@ function Parametrler() {
             onClick={handleKateqoriyaElave}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
-            <i className="fas fa-plus"></i> \u0258lav\u0259 Et
+            <i className="fas fa-plus"></i> Əlavə Et
           </button>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -145,10 +145,10 @@ function Parametrler() {
         </div>
       </div>
 
-      {/* R\u0259ngl\u0259r */}
+      {/* Rənglər */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <h3 className="text-xl font-semibold mb-4">
-          <i className="fas fa-palette"></i> R\u0259ngl\u0259r
+          <i className="fas fa-palette"></i> Rənglər
         </h3>
         <div className="flex gap-4 mb-4">
           <input
@@ -156,7 +156,7 @@ function Parametrler() {
             value={yeniRngAd}
             onChange={(e) => setYeniRngAd(e.target.value)}
             className="flex-1 px-4 py-2 border rounded-lg"
-            placeholder="R\u0259ngin ad\u0131 (m\u0259s: Q\u0131rm\u0131z\u0131)"
+            placeholder="Rəngin adı (məs: Qırmızı)"
           />
           <input
             type="color"
@@ -168,7 +168,7 @@ function Parametrler() {
             onClick={handleRngElave}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
-            <i className="fas fa-plus"></i> \u0258lav\u0259 Et
+            <i className="fas fa-plus"></i> Əlavə Et
           </button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -205,10 +205,10 @@ function Parametrler() {
         </div>
       </div>
 
-      {/* \u00D6l\u00E7\u00FCl\u0259r */}
+      {/* Ölçülər */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <h3 className="text-xl font-semibold mb-4">
-          <i className="fas fa-ruler-horizontal"></i> \u00D6l\u00E7\u00FCl\u0259r
+          <i className="fas fa-ruler-horizontal"></i> Ölçülər
         </h3>
         <div className="flex gap-4 mb-4">
           <input
@@ -216,13 +216,13 @@ function Parametrler() {
             value={yeniOlcuAd}
             onChange={(e) => setYeniOlcuAd(e.target.value)}
             className="flex-1 px-4 py-2 border rounded-lg"
-            placeholder="\u00D6l\u00E7\u00FC (m\u0259s: S, M, L, XL)"
+            placeholder="Ölçü (məs: S, M, L, XL)"
           />
           <button
             onClick={handleOlcuElave}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
-            <i className="fas fa-plus"></i> \u0258lav\u0259 Et
+            <i className="fas fa-plus"></i> Əlavə Et
           </button>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -251,16 +251,16 @@ function Parametrler() {
         </div>
       </div>
 
-      {/* T\u0259chizat\u00E7\u0131lar */}
+      {/* Təchizatçılar */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4">T\u0259chizat\u00E7\u0131lar</h3>
+        <h3 className="text-xl font-semibold mb-4">Təchizatçılar</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <input
             type="text"
             value={yeniTechizatciAd}
             onChange={(e) => setYeniTechizatciAd(e.target.value)}
             className="px-4 py-2 border rounded-lg"
-            placeholder="T\u0259chizat\u00E7\u0131 ad\u0131"
+            placeholder="Təchizatçı adı"
           />
           <input
             type="tel"
@@ -273,7 +273,7 @@ function Parametrler() {
             onClick={handleTechizatciElave}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
-            <i className="fas fa-plus"></i> \u0258lav\u0259 Et
+            <i className="fas fa-plus"></i> Əlavə Et
           </button>
         </div>
         <div className="overflow-x-auto">
@@ -282,14 +282,14 @@ function Parametrler() {
               <tr>
                 <th className="px-4 py-3 text-left">Ad</th>
                 <th className="px-4 py-3 text-left">Telefon</th>
-                <th className="px-4 py-3 text-center">\u0258m\u0259liyyat</th>
+                <th className="px-4 py-3 text-center">Əməliyyat</th>
               </tr>
             </thead>
             <tbody>
               {data.techizatcilar.length === 0 ? (
                 <tr>
                   <td colSpan="3" className="px-4 py-8 text-center text-gray-500">
-                    T\u0259chizat\u00E7\u0131 qeyd edilm\u0259yib
+                    Təchizatçı qeyd edilməyib
                   </td>
                 </tr>
               ) : (
@@ -321,33 +321,32 @@ function Parametrler() {
         </div>
       </div>
 
-      {/* Ma\u011Faza M\u0259lumatlar\u0131 */}
+      {/* Mağaza Məlumatları */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <h3 className="text-xl font-semibold mb-4">
-          <i className="fas fa-store"></i> Ma\u011Faza M\u0259lumatlar\u0131 (Q\u0259bzd\u0259
-          G\u00F6rs\u0259n\u0259c\u0259k)
+          <i className="fas fa-store"></i> Mağaza Məlumatları (Qəbzdə Görsənəcək)
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ma\u011Faza Ad\u0131
+              Mağaza Adı
             </label>
             <input
               type="text"
               value={magazaAd}
               onChange={(e) => setMagazaAd(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              placeholder="M\u0259s\u0259l\u0259n: Elite Fashion"
+              placeholder="Məsələn: Elite Fashion"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">\u00DCnvan</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Ünvan</label>
             <input
               type="text"
               value={magazaUnvan}
               onChange={(e) => setMagazaUnvan(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              placeholder="M\u0259s\u0259l\u0259n: Bak\u0131 \u015F\u0259h., N\u0259simi ray."
+              placeholder="Məsələn: Bakı şəh., Nəsimi ray."
             />
           </div>
           <div>
@@ -357,7 +356,7 @@ function Parametrler() {
               value={magazaTel}
               onChange={(e) => setMagazaTel(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              placeholder="M\u0259s\u0259l\u0259n: +994 XX XXX XX XX"
+              placeholder="Məsələn: +994 XX XXX XX XX"
             />
           </div>
         </div>
@@ -369,10 +368,10 @@ function Parametrler() {
         </button>
       </div>
 
-      {/* M\u0259lumat \u0130dar\u0259etm\u0259si */}
+      {/* Məlumat İdarəetməsi */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h3 className="text-xl font-semibold mb-4 text-red-600">
-          <i className="fas fa-exclamation-triangle"></i> M\u0259lumat \u0130dar\u0259etm\u0259si
+          <i className="fas fa-exclamation-triangle"></i> Məlumat İdarəetməsi
         </h3>
         <button
           onClick={async () => {
@@ -387,12 +386,11 @@ function Parametrler() {
           }}
           className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
         >
-          <i className="fas fa-trash"></i> B\u00FCt\u00FCn M\u0259lumatlar\u0131 Sil
+          <i className="fas fa-trash"></i> Bütün Məlumatları Sil
         </button>
         <p className="text-sm text-gray-600 mt-2">
-          <i className="fas fa-exclamation-triangle"></i> Diqq\u0259t: Bu \u0259m\u0259liyyat
-          b\u00FCt\u00FCn m\u0259lumatlar\u0131 sil\u0259c\u0259k v\u0259 geri qaytar\u0131la
-          bilm\u0259z!
+          <i className="fas fa-exclamation-triangle"></i> Diqqət: Bu əməliyyat
+          bütün məlumatları siləcək və geri qaytarıla bilməz!
         </p>
       </div>
     </div>

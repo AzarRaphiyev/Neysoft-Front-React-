@@ -26,14 +26,14 @@ function AnbarSiyahisi() {
     const ws_data = [
       [
         'Mal Kodu',
-        'Mal\u0131n Ad\u0131',
+        'Malın Adı',
         'Kateqoriya',
-        'R\u0259ng',
-        '\u00D6l\u00E7\u00FC',
-        'Qal\u0131q Miqdar\u0131',
-        'Al\u0131\u015F Qiym\u0259ti',
-        'Sat\u0131\u015F Qiym\u0259ti',
-        '\u00DCmumi D\u0259y\u0259r',
+        'Rəng',
+        'Ölçü',
+        'Qalıq Miqdarı',
+        'Alış Qiyməti',
+        'Satış Qiyməti',
+        'Ümumi Dəyər',
       ],
     ];
     data.anbar.forEach((m) => {
@@ -59,7 +59,7 @@ function AnbarSiyahisi() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">
-          <i className="fas fa-boxes"></i> Anbar Siyah\u0131s\u0131
+          <i className="fas fa-boxes"></i> Anbar Siyahısı
         </h2>
         <button
           onClick={handleExport}
@@ -84,7 +84,7 @@ function AnbarSiyahisi() {
             onChange={(e) => setNovFilter(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
-            <option value="">B\u00FCt\u00FCn kateqoriyalar</option>
+            <option value="">Bütün kateqoriyalar</option>
             {data.kateqoriyalar.map((k) => (
               <option key={k.id} value={k.id}>
                 {k.nov_adi}
@@ -98,8 +98,7 @@ function AnbarSiyahisi() {
               onChange={(e) => setSifirGoster(e.target.checked)}
               className="w-4 h-4"
             />
-            <span className="text-sm">Qal\u0131\u011F\u0131 0 olanlar\u0131 g\u00F6st\u0259r</span>
-          </label>
+            <span className="text-sm">Qalığı 0 olanları göstər</span>          </label>
         </div>
       </div>
 
@@ -110,15 +109,6 @@ function AnbarSiyahisi() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left">Barkod</th>
-                <th className="px-4 py-3 text-left">Mal\u0131n Ad\u0131</th>
-                <th className="px-4 py-3 text-left">N\u00F6v</th>
-                <th className="px-4 py-3 text-left">R\u0259ng</th>
-                <th className="px-4 py-3 text-left">\u00D6l\u00E7\u00FC</th>
-                <th className="px-4 py-3 text-right">Qal\u0131q</th>
-                <th className="px-4 py-3 text-right">Al\u0131\u015F Qiym\u0259ti</th>
-                <th className="px-4 py-3 text-right">Sat\u0131\u015F Qiym\u0259ti</th>
-                <th className="px-4 py-3 text-right">\u00DCmumi D\u0259y\u0259r</th>
-                <th className="px-4 py-3 text-center">\u0258m\u0259liyyat</th>
                 <th className="px-4 py-3 text-left">Malın Adı</th>
                 <th className="px-4 py-3 text-left">Növ</th>
                 <th className="px-4 py-3 text-left">Rəng</th>

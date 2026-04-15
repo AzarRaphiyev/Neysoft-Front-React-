@@ -17,7 +17,7 @@ function DaxilolmaTarixce() {
 
   const handleExport = () => {
     const ws_data = [
-      ['Qaim\u0259 Kodu', 'Tarix', 'T\u0259chizat\u00E7\u0131', 'M\u0259hsul Say\u0131', '\u00DCmumi M\u0259bl\u0259\u011F'],
+      ['Qaimə Kodu', 'Tarix', 'Təchizatçı', 'Məhsul Sayı', 'Ümumi Məbləğ'],
     ];
     filtered.forEach((q) => {
       const techizatci = data.techizatcilar.find((t) => t.id === parseInt(q.techizatci_id));
@@ -40,7 +40,7 @@ function DaxilolmaTarixce() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">
-          <i className="fas fa-clipboard-list"></i> Mal Daxil Olma Tarix\u00E7\u0259si
+          <i className="fas fa-clipboard-list"></i> Mal Daxil Olma Tarixçəsi
         </h2>
         <button
           onClick={handleExport}
@@ -54,7 +54,7 @@ function DaxilolmaTarixce() {
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm mb-2">Ba\u015Flama Tarixi</label>
+            <label className="block text-sm mb-2">Başlama Tarixi</label>
             <input
               type="date"
               value={baslama}
@@ -63,7 +63,7 @@ function DaxilolmaTarixce() {
             />
           </div>
           <div>
-            <label className="block text-sm mb-2">Bitm\u0259 Tarixi</label>
+            <label className="block text-sm mb-2">Bitmə Tarixi</label>
             <input
               type="date"
               value={bitme}
@@ -85,18 +85,18 @@ function DaxilolmaTarixce() {
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-3 text-left">Qaim\u0259 Kodu</th>
+                <th className="px-4 py-3 text-left">Qaimə Kodu</th>
                 <th className="px-4 py-3 text-left">Tarix</th>
-                <th className="px-4 py-3 text-left">T\u0259chizat\u00E7\u0131</th>
-                <th className="px-4 py-3 text-right">M\u0259hsul Say\u0131</th>
-                <th className="px-4 py-3 text-right">\u00DCmumi M\u0259bl\u0259\u011F</th>
+                <th className="px-4 py-3 text-left">Təchizatçı</th>
+                <th className="px-4 py-3 text-right">Məhsul Sayı</th>
+                <th className="px-4 py-3 text-right">Ümumi Məbləğ</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                    Qaim\u0259 tap\u0131lmad\u0131
+                    Qaimə tapılmadı
                   </td>
                 </tr>
               ) : (

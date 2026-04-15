@@ -44,42 +44,42 @@ function Dashboard() {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">\u0130dar\u0259 Paneli</h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-6">İdarə Paneli</h2>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-blue-100 text-sm">G\u00FCnl\u00FCk Sat\u0131\u015F</p>
+          <p className="text-blue-100 text-sm">Günlük Satış</p>
           <h3 className="text-3xl font-bold">{formatMebleg(stats.gunlukMebleg)}</h3>
-          <p className="text-blue-100 text-xs mt-2">{stats.gunlukSay} \u0259m\u0259liyyat</p>
+          <p className="text-blue-100 text-xs mt-2">{stats.gunlukSay} əməliyyat</p>
         </div>
 
         <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-green-100 text-sm">Ayl\u0131q Sat\u0131\u015F</p>
+          <p className="text-green-100 text-sm">Aylıq Satış</p>
           <h3 className="text-3xl font-bold">{formatMebleg(stats.ayliqMebleg)}</h3>
-          <p className="text-green-100 text-xs mt-2">{stats.ayliqSay} \u0259m\u0259liyyat</p>
+          <p className="text-green-100 text-xs mt-2">{stats.ayliqSay} əməliyyat</p>
         </div>
 
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-purple-100 text-sm">Ayl\u0131q M\u0259nf\u0259\u0259t</p>
+          <p className="text-purple-100 text-sm">Aylıq Mənfəət</p>
           <h3 className="text-3xl font-bold">{formatMebleg(stats.ayliqMenfeet)}</h3>
         </div>
 
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-orange-100 text-sm">Anbar D\u0259y\u0259ri</p>
+          <p className="text-orange-100 text-sm">Anbar Dəyəri</p>
           <h3 className="text-3xl font-bold">{formatMebleg(stats.anbarDeyer)}</h3>
-          <p className="text-orange-100 text-xs mt-2">{stats.anbarSay} m\u0259hsul</p>
+          <p className="text-orange-100 text-xs mt-2">{stats.anbarSay} məhsul</p>
         </div>
       </div>
 
       {/* Stock Warnings */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <h3 className="text-xl font-semibold mb-4 text-red-600">
-          <i className="fas fa-exclamation-triangle"></i> Stok X\u0259b\u0259rdarl\u0131qlar\u0131
+          <i className="fas fa-exclamation-triangle"></i> Stok Xəbərdarlıqları
         </h3>
         {stokXeberdarlar.stokSifir.length === 0 && stokXeberdarlar.stokAz.length === 0 ? (
           <p className="text-green-600">
-            <i className="fas fa-check-circle"></i> Stok v\u0259ziyy\u0259ti normal\u0131d\u0131r
+            <i className="fas fa-check-circle"></i> Stok vəziyyəti normaldır
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -87,9 +87,9 @@ function Dashboard() {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-3 py-2 text-left">Barkod</th>
-                  <th className="px-3 py-2 text-left">Mal Ad\u0131</th>
+                  <th className="px-3 py-2 text-left">Mal Adı</th>
                   <th className="px-3 py-2 text-left">Kateqoriya</th>
-                  <th className="px-3 py-2 text-right">Qal\u0131q</th>
+                  <th className="px-3 py-2 text-right">Qalıq</th>
                   <th className="px-3 py-2 text-left">Status</th>
                 </tr>
               </thead>
@@ -101,7 +101,7 @@ function Dashboard() {
                     <td className="px-3 py-2 text-gray-600">{m.nov_adi || '-'}</td>
                     <td className="px-3 py-2 text-right">{m.qaliq}</td>
                     <td className="px-3 py-2">
-                      <i className="fas fa-times-circle text-red-600"></i> Qurtar\u0131b
+                      <i className="fas fa-times-circle text-red-600"></i> Qurtarıb
                     </td>
                   </tr>
                 ))}
@@ -112,7 +112,7 @@ function Dashboard() {
                     <td className="px-3 py-2 text-gray-600">{m.nov_adi || '-'}</td>
                     <td className="px-3 py-2 text-right">{m.qaliq}</td>
                     <td className="px-3 py-2">
-                      <i className="fas fa-exclamation-circle text-yellow-600"></i> Az qal\u0131b
+                      <i className="fas fa-exclamation-circle text-yellow-600"></i> Az qalıb
                     </td>
                   </tr>
                 ))}
@@ -125,19 +125,19 @@ function Dashboard() {
       {/* Recent Sales */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h3 className="text-xl font-semibold mb-4">
-          <i className="fas fa-list"></i> Son Sat\u0131\u015Flar
+          <i className="fas fa-list"></i> Son Satışlar
         </h3>
         {sonSatislar.length === 0 ? (
-          <p className="text-gray-500">H\u0259l\u0259 sat\u0131\u015F edilm\u0259yib</p>
+          <p className="text-gray-500">Hələ satış edilməyib</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-3 py-2 text-left">Q\u0259bz \u2116</th>
+                  <th className="px-3 py-2 text-left">Qəbz №</th>
                   <th className="px-3 py-2 text-left">Tarix</th>
-                  <th className="px-3 py-2 text-left">M\u00FC\u015Ft\u0259ri</th>
-                  <th className="px-3 py-2 text-right">M\u0259bl\u0259\u011F</th>
+                  <th className="px-3 py-2 text-left">Müştəri</th>
+                  <th className="px-3 py-2 text-right">Məbləğ</th>
                 </tr>
               </thead>
               <tbody>

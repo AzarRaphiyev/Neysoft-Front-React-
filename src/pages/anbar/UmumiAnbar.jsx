@@ -8,14 +8,14 @@ function UmumiAnbar() {
 
   const tabs = [
     { id: 'malDaxil', icon: 'fas fa-plus', label: 'Mal Daxil Et' },
-    { id: 'daxilolmaTarixce', icon: 'fas fa-clipboard-list', label: 'Daxil Olma Tarix\u00E7\u0259si' },
-    { id: 'anbar', icon: 'fas fa-boxes', label: 'Anbar Siyah\u0131s\u0131' },
+    { id: 'daxilolmaTarixce', icon: 'fas fa-clipboard-list', label: 'Daxil Olma Tarixçəsi' },
+    { id: 'anbar', icon: 'fas fa-boxes', label: 'Anbar Siyahısı' },
   ];
 
   return (
     <div>
       <h2 className="text-3xl font-bold text-gray-800 mb-6">
-        <i className="fas fa-warehouse"></i> \u00DCmumi Anbar
+        <i className="fas fa-warehouse"></i> Ümumi Anbar
       </h2>
 
       {/* Sub Navigation */}
