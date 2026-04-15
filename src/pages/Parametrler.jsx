@@ -365,7 +365,7 @@ function Parametrler() {
           onClick={handleMagazaSaxla}
           className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
         >
-          <i className="fas fa-save"></i> Saxla
+          <i className="fas fa-save"></i> Yadda saxla
         </button>
       </div>
 

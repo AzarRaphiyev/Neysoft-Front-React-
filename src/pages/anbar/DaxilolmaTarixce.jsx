@@ -73,7 +73,7 @@ function DaxilolmaTarixce() {
           </div>
           <div className="flex items-end">
             <button className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-              <i className="fas fa-search"></i> Axtar
+              <i className="fas fa-search"></i> Axtar...
             </button>
           </div>
         </div>

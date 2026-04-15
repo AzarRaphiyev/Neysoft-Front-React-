@@ -323,7 +323,7 @@ function MalDaxil() {
               onClick={handleQaimeSaxla}
               className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700"
             >
-              <i className="fas fa-save"></i> Qaim\u0259ni Saxla
+              <i className="fas fa-save"></i> Qaiməni Yadda saxla
             </button>
           </div>
         </div>

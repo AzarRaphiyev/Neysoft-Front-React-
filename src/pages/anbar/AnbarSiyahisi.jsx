@@ -119,62 +119,99 @@ function AnbarSiyahisi() {
                 <th className="px-4 py-3 text-right">Sat\u0131\u015F Qiym\u0259ti</th>
                 <th className="px-4 py-3 text-right">\u00DCmumi D\u0259y\u0259r</th>
                 <th className="px-4 py-3 text-center">\u0258m\u0259liyyat</th>
+                <th className="px-4 py-3 text-left">Malın Adı</th>
+                <th className="px-4 py-3 text-left">Növ</th>
+                <th className="px-4 py-3 text-left">Rəng</th>
+                <th className="px-4 py-3 text-left">Ölçü</th>
+                <th className="px-4 py-3 text-right">Qalıq</th>
+                <th className="px-4 py-3 text-right">Alış Qiyməti</th>
+                <th className="px-4 py-3 text-right">Satış Qiyməti</th>
+                <th className="px-4 py-3 text-right">Ümumi Dəyər</th>
+                <th className="px-4 py-3 text-center">Əməliyyat</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan="10" className="px-4 py-8 text-center text-gray-500">
-                    M\u0259hsul tap\u0131lmad\u0131
+                    Məhsul tapılmadı
                   </td>
                 </tr>
               ) : (
                 filtered.map((m) => {
                   const rowClass = m.qaliq === 0 ? 'stok-sifir' : m.qaliq <= 5 ? 'stok-az' : '';
+                  const eId = `exp-${m.id}`;
                   return (
-                    <tr key={m.id} className={`border-b hover:bg-gray-50 ${rowClass}`}>
-                      <td className="px-4 py-3">{m.mal_kod}</td>
-                      <td className="px-4 py-3 font-medium">{m.mal_adi}</td>
-                      <td className="px-4 py-3">{m.nov_adi}</td>
-                      <td className="px-4 py-3">
-                        {m.reng_kod ? (
-                          <span className="inline-flex items-center gap-1">
-                            <span
-                              className="w-4 h-4 rounded border"
-                              style={{ backgroundColor: m.reng_kod }}
-                            ></span>
-                            {m.reng_adi}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">{m.olcu_adi || '-'}</td>
-                      <td className="px-4 py-3 text-right font-semibold">{m.qaliq}</td>
-                      <td className="px-4 py-3 text-right">{formatMebleg(m.alis_qiymeti)}</td>
-                      <td className="px-4 py-3 text-right">{formatMebleg(m.satis_qiymeti)}</td>
-                      <td className="px-4 py-3 text-right font-bold">
-                        {formatMebleg(m.qaliq * m.alis_qiymeti)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {m.qaliq === 0 && (
-                          <button
-                            onClick={async () => {
-                              const confirmed = await showConfirm(
-                                'Məhsulu sil',
-                                'Bu məhsulu silmək istədiyinizdən əminsiniz?',
-                              );
-                              if (confirmed) {
-                                deleteAnbarItem(m.id);
-                              }
-                            }}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
+                    <React.Fragment key={m.id}>
+                      <tr
+                        className={`border-b hover:bg-gray-50 cursor-pointer ${rowClass}`}
+                        onClick={(e) => {
+                          const el = document.getElementById(eId);
+                          if (el) el.classList.toggle('hidden');
+                        }}
+                      >
+                        <td className="px-4 py-3">{m.mal_kod}</td>
+                        <td className="px-4 py-3 font-medium">{m.mal_adi}</td>
+                        <td className="px-4 py-3">{m.nov_adi}</td>
+                        <td className="px-4 py-3">
+                          {m.reng_kod ? (
+                            <span className="inline-flex items-center gap-1">
+                              <span
+                                className="w-4 h-4 rounded border"
+                                style={{ backgroundColor: m.reng_kod }}
+                              ></span>
+                              {m.reng_adi}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">{m.olcu_adi || '-'}</td>
+                        <td className="px-4 py-3 text-right font-semibold">{m.qaliq}</td>
+                        <td className="px-4 py-3 text-right">{formatMebleg(m.alis_qiymeti)}</td>
+                        <td className="px-4 py-3 text-right">{formatMebleg(m.satis_qiymeti)}</td>
+                        <td className="px-4 py-3 text-right font-bold">
+                          {formatMebleg(m.qaliq * m.alis_qiymeti)}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {m.qaliq === 0 && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const confirmed = await showConfirm(
+                                  'Məhsulu sil',
+                                  'Bu məhsulu silmək istədiyinizdən əminsiniz?',
+                                );
+                                if (confirmed) {
+                                  deleteAnbarItem(m.id);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {/* Ətraflı məlumat (Expandable Row) */}
+                      <tr id={eId} className="hidden bg-gray-50">
+                        <td colSpan="10" className="px-4 py-4">
+                          <div className="text-sm text-gray-700 p-4 border border-gray-200 rounded-lg">
+                            <h4 className="font-semibold text-lg mb-3 border-b pb-2"><i className="fas fa-info-circle mr-2 text-blue-500"></i>Ətraflı məlumat:</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <p className="mb-2"><span className="font-medium text-gray-500 mr-2">Barkod:</span> {m.mal_kod}</p>
+                                <p className="mb-2"><span className="font-medium text-gray-500 mr-2">Təchizatçı:</span> {m.techizatci?.ad || 'Texniki Məlumat Yoxdur'}</p>
+                              </div>
+                              <div>
+                                <p className="mb-2 font-medium text-gray-500">Açıqlama:</p>
+                                <p className="italic bg-white p-3 rounded border border-gray-100 shadow-sm">{m.description || 'Bu məhsul üçün əlavə məlumat qeyd olunmayıb.'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   );
                 })
               )}
