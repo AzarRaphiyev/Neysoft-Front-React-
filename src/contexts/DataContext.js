@@ -126,41 +126,80 @@ export function DataProvider({ children }) {
     });
   }, []);
 
-  const addQaime = useCallback((qaime) => {
-    setData((prev) => {
-      const updatedAnbar = [...prev.anbar];
-      qaime.mehsullar.forEach((m) => {
-        const mevcut = updatedAnbar.find(
-          (a) => a.mal_kod === m.mal_kod && a.reng_id === m.reng_id && a.olcu_id === m.olcu_id
-        );
-        if (mevcut) {
-          mevcut.qaliq += m.miqdar;
-          mevcut.alis_qiymeti = m.alis_qiymeti;
-          mevcut.satis_qiymeti = m.satis_qiymeti;
-        } else {
-          updatedAnbar.push({
-            id: Date.now() + Math.random(),
-            mal_kod: m.mal_kod,
-            mal_adi: m.mal_adi,
-            nov_id: m.nov_id,
-            nov_adi: m.nov_adi,
-            reng_id: m.reng_id || null,
-            reng_adi: m.reng_adi || '',
-            reng_kod: m.reng_kod || '',
-            olcu_id: m.olcu_id,
-            olcu_adi: m.olcu_adi,
-            qaliq: m.miqdar,
-            alis_qiymeti: m.alis_qiymeti,
-            satis_qiymeti: m.satis_qiymeti,
-          });
-        }
-      });
-      const updated = { ...prev, qaimeler: [...prev.qaimeler, qaime], anbar: updatedAnbar };
-      saveData(updated);
-      return updated;
-    });
-    setYeniMehsullar([]);
+  const fetchAnbar = useCallback(async (search = '', outOfStock = false, categoryId = '') => {
+    try {
+      const res = await api.get('/products', { params: { search, outOfStock, categoryId } });
+      const rawData = res.data?.data || res.data || [];
+      const mappedAnbar = rawData.map(item => ({
+        id: item.id,
+        mal_kod: item.barcode || '-',
+        mal_adi: item.name || '-',
+        nov_id: item.categoryId || null,
+        nov_adi: item.category?.name || '-',
+        reng_id: item.colorId || null,
+        reng_adi: item.color?.name || '-',
+        reng_kod: item.color?.hexCode || '',
+        olcu_id: item.sizeId || null,
+        olcu_adi: item.size?.name || '-',
+        qaliq: item.stockQuantity || 0,
+        alis_qiymeti: item.purchasePrice || 0,
+        satis_qiymeti: item.salePrice || 0,
+      }));
+      setData((prev) => ({ ...prev, anbar: mappedAnbar }));
+    } catch (err) {
+      console.error('fetchAnbar Hatası:', err);
+    }
   }, []);
+
+  const fetchQaimeler = useCallback(async (startDate = '', endDate = '', receiptCode = '') => {
+    try {
+      const res = await api.get('/inventory', { params: { startDate, endDate, receiptCode } });
+      const qaimelerData = res.data?.data || res.data || [];
+      setData((prev) => ({ ...prev, qaimeler: qaimelerData }));
+    } catch (err) {
+      console.error('fetchQaimeler Hatası:', err);
+    }
+  }, []);
+
+  const updateSatisQiymeti = useCallback(async (barcode, newPrice) => {
+    try {
+      await api.patch('/products/update-price', { barcode, salePrice: Number(newPrice) });
+      await fetchAnbar();
+    } catch (err) {
+      console.error('updateSatisQiymeti Hatası:', err);
+      throw err;
+    }
+  }, [fetchAnbar]);
+
+  const createProduct = useCallback(async (productData) => {
+    try {
+      await api.post('/products', productData);
+      await fetchAnbar();
+    } catch (e) {
+      console.error('createProduct Hatası:', e);
+      throw e;
+    }
+  }, [fetchAnbar]);
+
+  const addQaime = useCallback(async (qaimeData) => {
+    try {
+      // qaimeData formatı: { techizatci_id, mehsullar: [{ productId, quantity, purchasePrice }] }
+      const payload = {
+        supplierId: Number(qaimeData.techizatci_id),
+        items: qaimeData.mehsullar.map(m => ({
+          productId: m.productId,
+          quantity: Number(m.miqdar),
+          purchasePrice: Number(m.alis_qiymeti)
+        }))
+      };
+      await api.post('/inventory', payload);
+      await fetchAnbar();
+      await fetchQaimeler();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  }, [fetchAnbar, fetchQaimeler]);
 
   const deleteAnbarItem = useCallback((id) => {
     setData((prev) => {
@@ -291,6 +330,10 @@ export function DataProvider({ children }) {
         sablonlar,
         updateMagazaMelumat,
         clearAll,
+        fetchAnbar,
+        fetchQaimeler,
+        updateSatisQiymeti,
+        createProduct,
       }}
     >
       {children}

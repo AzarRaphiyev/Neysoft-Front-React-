@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import MalDaxil from './MalDaxil';
 import DaxilolmaTarixce from './DaxilolmaTarixce';
 import AnbarSiyahisi from './AnbarSiyahisi';
+import YeniMehsul from './YeniMehsul';
 
 function UmumiAnbar() {
   const [activeTab, setActiveTab] = useState('malDaxil');
 
   const tabs = [
+    { id: 'yeniMehsul', icon: 'fas fa-box-open', label: 'Yeni Məhsul' },
     { id: 'malDaxil', icon: 'fas fa-plus', label: 'Mal Daxil Et' },
     { id: 'daxilolmaTarixce', icon: 'fas fa-clipboard-list', label: 'Daxil Olma Tarixçəsi' },
     { id: 'anbar', icon: 'fas fa-boxes', label: 'Anbar Siyahısı' },
@@ -25,9 +27,8 @@ function UmumiAnbar() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`sub-tab-button px-4 py-2 rounded-lg transition text-sm ${
-                activeTab === tab.id ? 'sub-tab-active' : ''
-              }`}
+              className={`sub-tab-button px-4 py-2 rounded-lg transition text-sm ${activeTab === tab.id ? 'sub-tab-active' : ''
+                }`}
             >
               <i className={tab.icon}></i> {tab.label}
             </button>
@@ -36,6 +37,7 @@ function UmumiAnbar() {
       </div>
 
       {/* Tab Content */}
+      {activeTab === 'yeniMehsul' && <YeniMehsul />}
       {activeTab === 'malDaxil' && <MalDaxil />}
       {activeTab === 'daxilolmaTarixce' && <DaxilolmaTarixce />}
       {activeTab === 'anbar' && <AnbarSiyahisi />}

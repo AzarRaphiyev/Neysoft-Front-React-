@@ -3,34 +3,28 @@ import { useData } from '../../contexts/DataContext';
 import { useUI } from '../../contexts/UIContext';
 import { formatMebleg } from '../../utils/helpers';
 import * as XLSX from 'xlsx';
-import api from '../../utils/api';
 
 function AnbarSiyahisi() {
-  const { data, deleteAnbarItem, updateData } = useData();
+  const { data, deleteAnbarItem, fetchAnbar, updateSatisQiymeti } = useData();
   const { showConfirm } = useUI();
   const [axtar, setAxtar] = useState('');
-  const [novFilter, setNovFilter] = useState('');
+  const [kateqoriya, setKateqoriya] = useState('');
   const [sifirGoster, setSifirGoster] = useState(false);
 
+  React.useEffect(() => {
+    fetchAnbar(axtar, sifirGoster, kateqoriya);
+  }, [axtar, sifirGoster, kateqoriya, fetchAnbar]);
+
   const filtered = useMemo(() => {
-    return data.anbar.filter((m) => {
-      const axtarMatch =
-        m.mal_adi.toLowerCase().includes(axtar.toLowerCase()) ||
-        m.mal_kod.toLowerCase().includes(axtar.toLowerCase());
-      const novMatch = !novFilter || m.nov_id === parseInt(novFilter);
-      const sifirMatch = sifirGoster || m.qaliq > 0;
-      return axtarMatch && novMatch && sifirMatch;
-    });
-  }, [data.anbar, axtar, novFilter, sifirGoster]);
+    return data.anbar || [];
+  }, [data.anbar]);
 
   const handleEditPrice = async (e, m) => {
     e.stopPropagation();
     const yeniFiyat = prompt('Yeni satış qiymətini daxil edin:', m.satis_qiymeti);
     if (yeniFiyat !== null && !isNaN(yeniFiyat) && yeniFiyat.trim() !== '') {
       try {
-        await api.patch(`/products/${m.id}/price`, { price: parseFloat(yeniFiyat) });
-        const updatedAnbar = data.anbar.map(item => item.id === m.id ? { ...item, satis_qiymeti: parseFloat(yeniFiyat) } : item);
-        updateData({ anbar: updatedAnbar });
+        await updateSatisQiymeti(m.mal_kod, yeniFiyat);
       } catch (err) {
         alert('Qiymət yenilənərkən xəta baş verdi');
       }
@@ -95,14 +89,14 @@ function AnbarSiyahisi() {
             placeholder="Barkod v\u0259 ya mal ad\u0131 ilə axtar..."
           />
           <select
-            value={novFilter}
-            onChange={(e) => setNovFilter(e.target.value)}
+            value={kateqoriya}
+            onChange={(e) => setKateqoriya(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
-            <option value="">Bütün kateqoriyalar</option>
+            <option value="">Bütün Kateqoriyalar</option>
             {data.kateqoriyalar.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.nov_adi}
+                {k.nov_adi || k.name}
               </option>
             ))}
           </select>

@@ -4,18 +4,19 @@ import { formatMebleg } from '../../utils/helpers';
 import * as XLSX from 'xlsx';
 
 function DaxilolmaTarixce() {
-  const { data } = useData();
+  const { data, fetchQaimeler } = useData();
   const [baslama, setBaslama] = useState('');
   const [bitme, setBitme] = useState('');
   const [qaimeKodu, setQaimeKodu] = useState('');
 
+  React.useEffect(() => {
+    fetchQaimeler(baslama, bitme, qaimeKodu);
+  }, [baslama, bitme, qaimeKodu, fetchQaimeler]);
+
   const filtered = useMemo(() => {
-    let filteredQaimeler = [...data.qaimeler];
-    if (baslama) filteredQaimeler = filteredQaimeler.filter((q) => q.tarix >= baslama);
-    if (bitme) filteredQaimeler = filteredQaimeler.filter((q) => q.tarix <= bitme);
-    if (qaimeKodu) filteredQaimeler = filteredQaimeler.filter((q) => q.qaime_kod?.toLowerCase().includes(qaimeKodu.toLowerCase()));
-    return filteredQaimeler.sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
-  }, [data.qaimeler, baslama, bitme, qaimeKodu]);
+    const list = [...(data.qaimeler || [])];
+    return list.sort((a, b) => new Date(b.createdAt || b.tarix) - new Date(a.createdAt || a.tarix));
+  }, [data.qaimeler]);
 
   const handleExport = () => {
     const ws_data = [

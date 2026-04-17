@@ -12,89 +12,69 @@ function MalDaxil() {
   const [yeniMehsullar, setYeniMehsullar] = useState([]);
 
   // Form state
-  const [barkod, setBarkod] = useState('');
-  const [malAd, setMalAd] = useState('');
-  const [novId, setNovId] = useState('');
-  const [rengId, setRengId] = useState('');
-  const [olcuId, setOlcuId] = useState('');
+  const [axtaris, setAxtaris] = useState('');
+  const [secilenMehsul, setSecilenMehsul] = useState(null);
   const [miqdar, setMiqdar] = useState('');
   const [alisQiymeti, setAlisQiymeti] = useState('');
-  const [satisQiymeti, setSatisQiymeti] = useState('');
+
+  const axtarisSonuclari = axtaris.length > 1
+    ? data.anbar.filter(m => m.mal_kod.includes(axtaris) || m.mal_adi.toLowerCase().includes(axtaris.toLowerCase()))
+    : [];
+
+  const handleMehsulSec = (m) => {
+    setSecilenMehsul(m);
+    setAxtaris('');
+  };
 
   const handleMehsulElave = () => {
     const errors = [];
-    if (!barkod && !malAd) errors.push('Barkod və ya malın adı');
-    if (!malAd) errors.push('Malın adı');
-    if (!novId) errors.push('Növ');
-    if (!olcuId) errors.push('Ölçü');
+    if (!secilenMehsul) errors.push('Məhsul seçimi');
     if (!miqdar || parseInt(miqdar) <= 0) errors.push('Miqdar');
     if (!alisQiymeti || parseFloat(alisQiymeti) <= 0) errors.push('Alış qiyməti');
-    if (!satisQiymeti || parseFloat(satisQiymeti) <= 0) errors.push('Satış qiyməti');
 
     if (errors.length > 0) {
       showToast('Zəhmət olmasa bu xanaları doldurun:\n' + errors.join(', '), 'warning');
       return;
     }
 
-    const nov = data.kateqoriyalar.find((k) => k.id === parseInt(novId));
-    const reng = rengId ? data.rengler.find((r) => r.id === parseInt(rengId)) : null;
-    const olcu = data.olculer.find((o) => o.id === parseInt(olcuId));
-
-    if (!nov || !olcu) {
-      showToast('Seçimlər düzgün deyil!', 'warning');
-      return;
-    }
-
     const mehsul = {
-      mal_kod: barkod || 'ML-' + Date.now(),
-      mal_adi: malAd,
-      nov_id: nov.id,
-      nov_adi: nov.nov_adi,
-      reng_id: reng ? reng.id : null,
-      reng_adi: reng ? reng.ad : '',
-      reng_kod: reng ? reng.kod : '',
-      olcu_id: olcu.id,
-      olcu_adi: olcu.ad,
+      productId: secilenMehsul.id,
+      mal_kod: secilenMehsul.mal_kod,
+      mal_adi: secilenMehsul.mal_adi,
+      nov_adi: secilenMehsul.nov_adi,
+      reng_adi: secilenMehsul.reng_adi,
+      olcu_adi: secilenMehsul.olcu_adi,
       miqdar: parseInt(miqdar),
       alis_qiymeti: parseFloat(alisQiymeti),
-      satis_qiymeti: parseFloat(satisQiymeti),
+      satis_qiymeti: secilenMehsul.satis_qiymeti,
     };
 
     setYeniMehsullar((prev) => [...prev, mehsul]);
     // Reset form
-    setBarkod('');
-    setMalAd('');
-    setNovId('');
-    setRengId('');
-    setOlcuId('');
+    setSecilenMehsul(null);
     setMiqdar('');
     setAlisQiymeti('');
-    setSatisQiymeti('');
   };
 
   const handleMehsulSil = (index) => {
     setYeniMehsullar((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleQaimeSaxla = () => {
-    if (!qaimeKod || yeniMehsullar.length === 0) {
-      showToast('Qaimə kodu və ən azı bir məhsul tələb olunur!', 'warning');
+  const handleQaimeSaxla = async () => {
+    if (!qaimeTechizatci || yeniMehsullar.length === 0) {
+      showToast('Təchizatçı və ən azı bir məhsul tələb olunur!', 'warning');
       return;
     }
 
-    const qaime = {
-      id: Date.now(),
-      qaime_kod: qaimeKod,
-      techizatci_id: qaimeTechizatci,
-      tarix: qaimeTarix,
-      mehsullar: [...yeniMehsullar],
-    };
-
-    addQaime(qaime);
-    showToast('Qaimə uğurla saxlanıldı!', 'success');
-    setQaimeKod('');
-    setQaimeTechizatci('');
-    setYeniMehsullar([]);
+    try {
+      await addQaime({ techizatci_id: qaimeTechizatci, mehsullar: yeniMehsullar });
+      showToast('Qaimə uğurla saxlanıldı!', 'success');
+      setQaimeKod('');
+      setQaimeTechizatci('');
+      setYeniMehsullar([]);
+    } catch (err) {
+      showToast('Qaimə saxlanılarkən xəta baş verdi!', 'error');
+    }
   };
 
   const umumiMebleg = yeniMehsullar.reduce((sum, m) => sum + m.miqdar * m.alis_qiymeti, 0);
@@ -152,60 +132,35 @@ function MalDaxil() {
         </div>
       </div>
 
-      {/* Məhsul Əlavə Et */}
+      {/* Siyahıya Əlavə Et */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4">Məhsul Əlavə Et</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-          <input
-            type="text"
-            value={barkod}
-            onChange={(e) => setBarkod(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-            placeholder="Barkod *"
-          />
-          <input
-            type="text"
-            value={malAd}
-            onChange={(e) => setMalAd(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-            placeholder="Malın Adı *"
-          />
-          <select
-            value={novId}
-            onChange={(e) => setNovId(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-          >
-            <option value="">Növü seçin...</option>
-            {data.kateqoriyalar.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.nov_adi}
-              </option>
-            ))}
-          </select>
-          <select
-            value={rengId}
-            onChange={(e) => setRengId(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-          >
-            <option value="">Rəng seçin (istəyə bağlı)</option>
-            {data.rengler.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.ad}
-              </option>
-            ))}
-          </select>
-          <select
-            value={olcuId}
-            onChange={(e) => setOlcuId(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-          >
-            <option value="">Ölçü seçin...</option>
-            {data.olculer.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.ad}
-              </option>
-            ))}
-          </select>
+        <h3 className="text-xl font-semibold mb-4">Siyahıya Əlavə Et</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 relative">
+          <div className="col-span-1 md:col-span-2 relative">
+            <input
+              type="text"
+              value={secilenMehsul ? secilenMehsul.mal_adi + ' (' + secilenMehsul.mal_kod + ')' : axtaris}
+              onChange={(e) => {
+                setAxtaris(e.target.value);
+                if (secilenMehsul) setSecilenMehsul(null);
+              }}
+              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="Barkod və ya Ad ilə məhsul axtar..."
+            />
+            {axtaris && !secilenMehsul && axtarisSonuclari.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {axtarisSonuclari.map(m => (
+                  <div
+                    key={m.id}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                    onClick={() => handleMehsulSec(m)}
+                  >
+                    <strong>{m.mal_kod}</strong> - {m.mal_adi} ({m.nov_adi})
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <input
             type="number"
             value={miqdar}
@@ -222,26 +177,12 @@ function MalDaxil() {
             placeholder="Alış Qiyməti *"
             step="0.01"
           />
-          <input
-            type="number"
-            value={satisQiymeti}
-            onChange={(e) => setSatisQiymeti(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-            placeholder="Satış Qiyməti *"
-            step="0.01"
-          />
-        </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <p className="text-sm text-blue-800">
-            <i className="fas fa-lightbulb"></i> <strong>İpucu:</strong> Barkod oxuyucu ile
-            barkodu oxudun və Enter basın.
-          </p>
         </div>
         <button
           onClick={handleMehsulElave}
           className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
         >
-          <i className="fas fa-plus"></i> Məhsul Əlavə Et
+          <i className="fas fa-plus"></i> Siyahıya Əlavə Et
         </button>
       </div>
 
