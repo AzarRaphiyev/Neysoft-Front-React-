@@ -42,7 +42,7 @@ function Header() {
   return (
     <div className="header-bar sticky top-0 z-50 bg-white w-full border-b shadow-sm h-16 flex-shrink-0 flex items-center justify-between px-4">
       <div className="flex items-center gap-3">
-        <button onClick={toggleSidebar} className="text-gray-500 hover:text-gray-800 transition">
+        <button onClick={toggleSidebar} className="md:hidden text-gray-500 hover:text-gray-800 transition">
           <i className="fas fa-bars text-xl"></i>
         </button>
         <h1 className="text-lg font-bold text-gray-800">

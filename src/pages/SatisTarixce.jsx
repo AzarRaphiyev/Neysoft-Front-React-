@@ -11,14 +11,18 @@ function SatisTarixce() {
   const { openModal } = ui;
   const [baslama, setBaslama] = useState('');
   const [bitme, setBitme] = useState('');
+  const [qebzNo, setQebzNo] = useState('');
+  const [yalnizQaytarilanlar, setYalnizQaytarilanlar] = useState(false);
   const [selectedSatis, setSelectedSatis] = useState(null);
 
   const filtered = useMemo(() => {
     let filteredSatislar = [...data.satislar];
     if (baslama) filteredSatislar = filteredSatislar.filter((s) => s.tarix >= baslama);
     if (bitme) filteredSatislar = filteredSatislar.filter((s) => s.tarix <= bitme + 'T23:59:59');
+    if (qebzNo) filteredSatislar = filteredSatislar.filter((s) => s.qebz_nomre?.toLowerCase().includes(qebzNo.toLowerCase()));
+    if (yalnizQaytarilanlar) filteredSatislar = filteredSatislar.filter((s) => s.qaytarmalar && s.qaytarmalar.length > 0);
     return filteredSatislar.sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
-  }, [data.satislar, baslama, bitme]);
+  }, [data.satislar, baslama, bitme, qebzNo, yalnizQaytarilanlar]);
 
   const handleExport = () => {
     const ws_data = [
@@ -135,7 +139,7 @@ function SatisTarixce() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm mb-2">Başlama Tarixi</label>
             <input
@@ -154,9 +158,23 @@ function SatisTarixce() {
               className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
+          <div>
+            <label className="block text-sm mb-2">Qəbz №</label>
+            <input
+              type="text"
+              value={qebzNo}
+              onChange={(e) => setQebzNo(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="Qəbz nömrəsi..."
+            />
+          </div>
           <div className="flex items-end">
-            <button className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-              <i className="fas fa-search"></i> Axtar...
+            <button
+              onClick={() => setYalnizQaytarilanlar(!yalnizQaytarilanlar)}
+              className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${yalnizQaytarilanlar ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+            >
+              <i className="fas fa-undo mr-2"></i> Yalnız Qaytarılanlar
             </button>
           </div>
         </div>

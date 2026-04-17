@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { DataProvider, UIProvider, useUI } from './contexts';
 import { Sidebar, Header, Toast, ConfirmDialog } from './components';
 import Dashboard from './pages/Dashboard';
@@ -33,6 +33,17 @@ function MainLayout() {
 function AppContent() {
   const { toast, hideToast, confirmDialog, handleConfirm, handleCancel } = useUI();
 
+  let user = null;
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      user = JSON.parse(userStr);
+    }
+  } catch (e) { }
+  const role = user?.role || 'GUEST';
+
+  const isCashier = role === 'CASHIER';
+
   return (
     <>
       <Routes>
@@ -44,13 +55,13 @@ function AppContent() {
         {/* Protected Routes wrapped in MainLayout */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={isCashier ? <Navigate to="/satis" replace /> : <Dashboard />} />
             <Route path="/anbar" element={<UmumiAnbar />} />
             <Route path="/satis" element={<Satis />} />
             <Route path="/satis-tarixce" element={<SatisTarixce />} />
-            <Route path="/maliyye" element={<Maliyye />} />
-            <Route path="/parametrler" element={<Parametrler />} />
-            <Route path="/users" element={<Istifadeciler />} />
+            <Route path="/maliyye" element={isCashier ? <Navigate to="/satis" replace /> : <Maliyye />} />
+            <Route path="/parametrler" element={isCashier ? <Navigate to="/satis" replace /> : <Parametrler />} />
+            <Route path="/users" element={role === 'ADMIN' ? <Istifadeciler /> : <Navigate to="/" replace />} />
           </Route>
         </Route>
       </Routes>

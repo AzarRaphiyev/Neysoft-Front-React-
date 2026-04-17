@@ -3,9 +3,10 @@ import { useData } from '../../contexts/DataContext';
 import { useUI } from '../../contexts/UIContext';
 import { formatMebleg } from '../../utils/helpers';
 import * as XLSX from 'xlsx';
+import api from '../../utils/api';
 
 function AnbarSiyahisi() {
-  const { data, deleteAnbarItem } = useData();
+  const { data, deleteAnbarItem, updateData } = useData();
   const { showConfirm } = useUI();
   const [axtar, setAxtar] = useState('');
   const [novFilter, setNovFilter] = useState('');
@@ -21,6 +22,20 @@ function AnbarSiyahisi() {
       return axtarMatch && novMatch && sifirMatch;
     });
   }, [data.anbar, axtar, novFilter, sifirGoster]);
+
+  const handleEditPrice = async (e, m) => {
+    e.stopPropagation();
+    const yeniFiyat = prompt('Yeni satış qiymətini daxil edin:', m.satis_qiymeti);
+    if (yeniFiyat !== null && !isNaN(yeniFiyat) && yeniFiyat.trim() !== '') {
+      try {
+        await api.patch(`/products/${m.id}/price`, { price: parseFloat(yeniFiyat) });
+        const updatedAnbar = data.anbar.map(item => item.id === m.id ? { ...item, satis_qiymeti: parseFloat(yeniFiyat) } : item);
+        updateData({ anbar: updatedAnbar });
+      } catch (err) {
+        alert('Qiymət yenilənərkən xəta baş verdi');
+      }
+    }
+  };
 
   const handleExport = () => {
     const ws_data = [
@@ -159,7 +174,14 @@ function AnbarSiyahisi() {
                         <td className="px-4 py-3">{m.olcu_adi || '-'}</td>
                         <td className="px-4 py-3 text-right font-semibold">{m.qaliq}</td>
                         <td className="px-4 py-3 text-right">{formatMebleg(m.alis_qiymeti)}</td>
-                        <td className="px-4 py-3 text-right">{formatMebleg(m.satis_qiymeti)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span>{formatMebleg(m.satis_qiymeti)}</span>
+                            <button onClick={(e) => handleEditPrice(e, m)} className="text-blue-500 hover:text-blue-700">
+                              <i className="fas fa-edit"></i>
+                            </button>
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-right font-bold">
                           {formatMebleg(m.qaliq * m.alis_qiymeti)}
                         </td>

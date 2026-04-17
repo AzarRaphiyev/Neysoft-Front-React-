@@ -28,3 +28,8 @@ export function bugunISO() {
 export function buAyISO() {
   return new Date().toISOString().slice(0, 7);
 }
+
+export const formatWord = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};

@@ -12,6 +12,7 @@ function Satis() {
   const [musteriTel, setMusteriTel] = useState('');
   const [axtar, setAxtar] = useState('');
   const [odenisNov, setOdenisNov] = useState('Nağd');
+  const [odenisMebleg, setOdenisMebleg] = useState('');
 
   const filteredMehsullar = useMemo(() => {
     const search = axtar.toLowerCase();
@@ -42,13 +43,13 @@ function Satis() {
       setSebet((prev) =>
         prev.map((s, i) =>
           i ===
-          sebet.findIndex(
-            (x) =>
-              x.mal_id === malId &&
-              x.reng_id === mal.reng_id &&
-              x.olcu_id === mal.olcu_id &&
-              x.satis_qiymeti === mal.satis_qiymeti,
-          )
+            sebet.findIndex(
+              (x) =>
+                x.mal_id === malId &&
+                x.reng_id === mal.reng_id &&
+                x.olcu_id === mal.olcu_id &&
+                x.satis_qiymeti === mal.satis_qiymeti,
+            )
             ? { ...s, miqdar: s.miqdar + 1 }
             : s,
         ),
@@ -197,9 +198,17 @@ function Satis() {
       umumiMenfeet += m.menfeet;
     });
 
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const userId = user ? user.id : null;
+    const odenisFloat = parseFloat(odenisMebleg) || 0;
+
     const satis = {
       id: Date.now(),
       qebz_nomre: qebzNomre,
+      userId: userId,
+      odenisMebleg: odenisFloat,
+      qaliqMebleg: odenisFloat - yekunMebleg,
       tarix: new Date().toISOString(),
       musteri_ad: musteriAd,
       musteri_tel: musteriTel,
@@ -340,8 +349,15 @@ function Satis() {
                               {item.reng_adi && ` ${item.reng_adi}`}
                               {item.olcu_adi && ` • ${item.olcu_adi}`}
                             </p>
-                            <p className="text-xs text-blue-600 font-semibold">
-                              {formatMebleg(item.satis_qiymeti)}
+                            <p className="text-xs text-blue-600 font-semibold mt-1">
+                              <input
+                                type="number"
+                                value={item.satis_qiymeti}
+                                onChange={(e) => setSebet(prev => prev.map((s, i) => i === index ? { ...s, satis_qiymeti: parseFloat(e.target.value) || 0 } : s))}
+                                className="w-16 border rounded px-1"
+                                min="0"
+                                step="0.01"
+                              /> ₼
                             </p>
                           </div>
                           <button
@@ -460,6 +476,23 @@ function Satis() {
                   <div className="flex justify-between text-xl font-bold border-t pt-2">
                     <span>YEKUN:</span>
                     <span className="text-blue-600">{formatMebleg(hesaplamalar.yekun)}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-t pt-2 mt-2">
+                    <span className="font-semibold text-gray-700">Ödənən Məbləğ:</span>
+                    <input
+                      type="number"
+                      value={odenisMebleg}
+                      onChange={(e) => setOdenisMebleg(e.target.value)}
+                      className="w-24 px-2 py-1 border rounded"
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-green-600 border-t pt-2">
+                    <span>Qalıq (Para üstü):</span>
+                    <span>{formatMebleg((parseFloat(odenisMebleg) || 0) - hesaplamalar.yekun)}</span>
                   </div>
                 </div>
 

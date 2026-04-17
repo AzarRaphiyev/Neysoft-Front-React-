@@ -1,11 +1,56 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { loadData, saveData } from '../utils/storage';
+import api from '../utils/api';
+import { formatWord } from '../utils/helpers';
 
 const DataContext = createContext();
 
 export function DataProvider({ children }) {
-  const [data, setData] = useState(() => loadData());
+  const [data, setData] = useState(() => {
+    const loaded = loadData();
+    loaded.kateqoriyalar = [];
+    loaded.rengler = [];
+    loaded.olculer = [];
+    loaded.techizatcilar = [];
+    loaded.magazaMelumat = { ad: '', unvan: '', telefon: '' };
+    return loaded;
+  });
+  const [sablonlar, setSablonlar] = useState([]);
   const [sebet, setSebet] = useState([]);
+
+  const fetchParameters = useCallback(async () => {
+    try {
+      const [catRes, colRes, sizeRes, supRes, tplRes, storeRes] = await Promise.all([
+        api.get('/parameters/category'),
+        api.get('/parameters/color'),
+        api.get('/parameters/size'),
+        api.get('/parameters/supplier'),
+        api.get('/parameters/template'),
+        api.get('/store-settings')
+      ]);
+      const catData = catRes.data?.data || catRes.data || [];
+      const colData = colRes.data?.data || colRes.data || [];
+      const sizeData = sizeRes.data?.data || sizeRes.data || [];
+      const supData = supRes.data?.data || supRes.data || [];
+      const storeData = storeRes.data?.data || storeRes.data || {};
+      
+      setData((prev) => ({
+        ...prev,
+        kateqoriyalar: catData.map(c => ({ id: c.id, nov_adi: c.name })),
+        rengler: colData.map(r => ({ id: r.id, ad: r.name, kod: r.hexCode || '#ccc' })),
+        olculer: sizeData.map(s => ({ id: s.id, ad: s.name })),
+        techizatcilar: supData.map(t => ({ id: t.id, ad: t.name, tel: t.contact })),
+        magazaMelumat: storeData
+      }));
+      setSablonlar(tplRes.data?.data || tplRes.data || []);
+    } catch(err) {
+      console.error('API Fetch Hatası:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchParameters();
+  }, [fetchParameters]);
   const [yeniMehsullar, setYeniMehsullar] = useState([]);
   const [umumiEndirim, setUmumiEndirim] = useState({ tipi: null, deyer: 0 });
 
@@ -125,77 +170,77 @@ export function DataProvider({ children }) {
     });
   }, []);
 
-  const addKateqoriya = useCallback((kateqoriya) => {
-    setData((prev) => {
-      const updated = { ...prev, kateqoriyalar: [...prev.kateqoriyalar, kateqoriya] };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const addKateqoriya = useCallback(async (kateqoriya) => {
+    try { 
+      await api.post('/parameters/category', { name: formatWord(kateqoriya.nov_adi) }); 
+      fetchParameters(); 
+    } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const deleteKateqoriya = useCallback((id) => {
-    setData((prev) => {
-      const updated = { ...prev, kateqoriyalar: prev.kateqoriyalar.filter((k) => k.id !== id) };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const deleteKateqoriya = useCallback(async (id) => {
+    try { await api.delete(`/parameters/category/${id}`); fetchParameters(); } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const addReng = useCallback((reng) => {
-    setData((prev) => {
-      const updated = { ...prev, rengler: [...prev.rengler, reng] };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const addReng = useCallback(async (reng) => {
+    try { 
+      await api.post('/parameters/color', { name: formatWord(reng.ad), hexCode: reng.kod }); 
+      fetchParameters(); 
+    } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const deleteReng = useCallback((id) => {
-    setData((prev) => {
-      const updated = { ...prev, rengler: prev.rengler.filter((r) => r.id !== id) };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const deleteReng = useCallback(async (id) => {
+    try { await api.delete(`/parameters/color/${id}`); fetchParameters(); } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const addOlcu = useCallback((olcu) => {
-    setData((prev) => {
-      const updated = { ...prev, olculer: [...prev.olculer, olcu] };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const addOlcu = useCallback(async (olcu) => {
+    try { 
+      await api.post('/parameters/size', { name: formatWord(olcu.ad) }); 
+      fetchParameters(); 
+    } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const deleteOlcu = useCallback((id) => {
-    setData((prev) => {
-      const updated = { ...prev, olculer: prev.olculer.filter((o) => o.id !== id) };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const deleteOlcu = useCallback(async (id) => {
+    try { await api.delete(`/parameters/size/${id}`); fetchParameters(); } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const addTechizatci = useCallback((techizatci) => {
-    setData((prev) => {
-      const updated = { ...prev, techizatcilar: [...prev.techizatcilar, techizatci] };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const addTechizatci = useCallback(async (techizatci) => {
+    try { 
+       await api.post('/parameters/supplier', { name: formatWord(techizatci.ad), contact: techizatci.tel }); 
+       fetchParameters(); 
+    } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const deleteTechizatci = useCallback((id) => {
-    setData((prev) => {
-      const updated = { ...prev, techizatcilar: prev.techizatcilar.filter((t) => t.id !== id) };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const deleteTechizatci = useCallback(async (id) => {
+    try { await api.delete(`/parameters/supplier/${id}`); fetchParameters(); } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
-  const updateMagazaMelumat = useCallback((magazaMelumat) => {
-    setData((prev) => {
-      const updated = { ...prev, magazaMelumat };
-      saveData(updated);
-      return updated;
-    });
-  }, []);
+  const addTemplate = useCallback(async (template) => {
+    try { 
+      const payload = {
+        name: formatWord(template.sablon_adi),
+        categoryId: template.kateqoriya_id,
+        colorId: template.reng_id || null,
+        sizeId: template.olcu_id || null
+      };
+      await api.post('/parameters/template', payload); 
+      fetchParameters(); 
+    } catch (e) { console.error(e); }
+  }, [fetchParameters]);
+
+  const deleteTemplate = useCallback(async (id) => {
+    try { await api.delete(`/parameters/template/${id}`); fetchParameters(); } catch (e) { console.error(e); }
+  }, [fetchParameters]);
+
+  const updateMagazaMelumat = useCallback(async (magazaMelumat) => {
+    try { 
+      await api.patch('/store-settings', { 
+        name: magazaMelumat.ad, 
+        address: magazaMelumat.unvan, 
+        phone: magazaMelumat.telefon 
+      }); 
+      fetchParameters(); 
+    } catch (e) { console.error(e); }
+  }, [fetchParameters]);
 
   const clearAll = useCallback(() => {
     setData({
@@ -241,6 +286,9 @@ export function DataProvider({ children }) {
         deleteOlcu,
         addTechizatci,
         deleteTechizatci,
+        addTemplate,
+        deleteTemplate,
+        sablonlar,
         updateMagazaMelumat,
         clearAll,
       }}

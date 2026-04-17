@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useUI } from '../contexts/UIContext';
+import { formatWord } from '../utils/helpers';
 
 function Parametrler() {
   const {
@@ -14,9 +15,17 @@ function Parametrler() {
     addTechizatci,
     deleteTechizatci,
     updateMagazaMelumat,
+    sablonlar,
+    addTemplate,
+    deleteTemplate,
     clearAll,
   } = useData();
   const { showToast, showConfirm } = useUI();
+
+  const [sablonAd, setSablonAd] = useState('');
+  const [sablonKatId, setSablonKatId] = useState('');
+  const [sablonRengId, setSablonRengId] = useState('');
+  const [sablonOlcuId, setSablonOlcuId] = useState('');
 
   // Kateqoriya
   const [yeniKateqoriya, setYeniKateqoriya] = useState('');
@@ -30,7 +39,8 @@ function Parametrler() {
       return;
     }
     const yeniId = Math.max(...data.kateqoriyalar.map((k) => k.id), 0) + 1;
-    addKateqoriya({ id: yeniId, nov_adi: yeniKateqoriya });
+    const formattedKateqoriya = formatWord(yeniKateqoriya);
+    addKateqoriya({ id: yeniId, nov_adi: formattedKateqoriya });
     setYeniKateqoriya('');
   };
 
@@ -47,7 +57,8 @@ function Parametrler() {
       return;
     }
     const yeniId = Math.max(...data.rengler.map((r) => r.id), 0) + 1;
-    addReng({ id: yeniId, ad: yeniRngAd, kod: yeniRngKod });
+    const formattedRngAd = formatWord(yeniRngAd);
+    addReng({ id: yeniId, ad: formattedRngAd, kod: yeniRngKod });
     setYeniRngAd('');
     setYeniRngKod('#ff0000');
   };
@@ -64,7 +75,8 @@ function Parametrler() {
       return;
     }
     const yeniId = Math.max(...data.olculer.map((o) => o.id), 0) + 1;
-    addOlcu({ id: yeniId, ad: yeniOlcuAd });
+    const formattedOlcuAd = formatWord(yeniOlcuAd);
+    addOlcu({ id: yeniId, ad: formattedOlcuAd });
     setYeniOlcuAd('');
   };
 
@@ -77,15 +89,25 @@ function Parametrler() {
       return;
     }
     const yeniId = Math.max(...data.techizatcilar.map((t) => t.id), 0) + 1;
-    addTechizatci({ id: yeniId, ad: yeniTechizatciAd, tel: yeniTechizatciTel });
+    const formattedTechizatciAd = formatWord(yeniTechizatciAd);
+    addTechizatci({ id: yeniId, ad: formattedTechizatciAd, tel: yeniTechizatciTel });
     setYeniTechizatciAd('');
     setYeniTechizatciTel('');
   };
 
   // Mağaza Məlumat
-  const [magazaAd, setMagazaAd] = useState(data.magazaMelumat.ad);
-  const [magazaUnvan, setMagazaUnvan] = useState(data.magazaMelumat.unvan);
-  const [magazaTel, setMagazaTel] = useState(data.magazaMelumat.telefon);
+  const [magazaAd, setMagazaAd] = useState('');
+  const [magazaUnvan, setMagazaUnvan] = useState('');
+  const [magazaTel, setMagazaTel] = useState('');
+
+  React.useEffect(() => {
+    if (data.magazaMelumat) {
+      setMagazaAd(data.magazaMelumat.name || data.magazaMelumat.ad || '');
+      setMagazaUnvan(data.magazaMelumat.address || data.magazaMelumat.unvan || '');
+      setMagazaTel(data.magazaMelumat.phone || data.magazaMelumat.telefon || '');
+    }
+  }, [data.magazaMelumat]);
+
   const handleMagazaSaxla = () => {
     updateMagazaMelumat({ ad: magazaAd, unvan: magazaUnvan, telefon: magazaTel });
     showToast('Mağaza məlumatları saxlanıldı!', 'success');
@@ -366,6 +388,110 @@ function Parametrler() {
         >
           <i className="fas fa-save"></i> Yadda saxla
         </button>
+      </div>
+
+      {/* Məhsul Şablonları */}
+      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h3 className="text-xl font-semibold mb-4">
+          <i className="fas fa-layer-group"></i> Məhsul Şablonları
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+          <input
+            type="text"
+            value={sablonAd}
+            onChange={(e) => setSablonAd(e.target.value)}
+            className="px-4 py-2 border rounded-lg col-span-1 md:col-span-2"
+            placeholder="Şablon Adı (məs: Qış Kolleksiyası)"
+          />
+          <select
+            value={sablonKatId}
+            onChange={(e) => setSablonKatId(e.target.value)}
+            className="px-4 py-2 border rounded-lg"
+          >
+            <option value="">Kateqoriya Seç...</option>
+            {data.kateqoriyalar.map(k => <option key={k.id} value={k.id}>{k.nov_adi}</option>)}
+          </select>
+          <select
+            value={sablonRengId}
+            onChange={(e) => setSablonRengId(e.target.value)}
+            className="px-4 py-2 border rounded-lg"
+          >
+            <option value="">Rəng Seç...</option>
+            {data.rengler.map(r => <option key={r.id} value={r.id}>{r.ad}</option>)}
+          </select>
+          <select
+            value={sablonOlcuId}
+            onChange={(e) => setSablonOlcuId(e.target.value)}
+            className="px-4 py-2 border rounded-lg"
+          >
+            <option value="">Ölçü Seç...</option>
+            {data.olculer.map(o => <option key={o.id} value={o.id}>{o.ad}</option>)}
+          </select>
+          <button
+            onClick={() => {
+              if (!sablonAd || !sablonKatId) {
+                showToast('Şablon Adı və Kateqoriya daxil edilməlidir!', 'warning');
+                return;
+              }
+              addTemplate({ sablon_adi: sablonAd, kateqoriya_id: Number(sablonKatId), reng_id: sablonRengId ? Number(sablonRengId) : null, olcu_id: sablonOlcuId ? Number(sablonOlcuId) : null });
+              setSablonAd('');
+              setSablonKatId('');
+              setSablonRengId('');
+              setSablonOlcuId('');
+            }}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 md:col-span-5"
+          >
+            <i className="fas fa-plus"></i> Şablon Yarat
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-100 uppercase text-gray-600">
+              <tr>
+                <th className="px-4 py-3">Şablon Adı</th>
+                <th className="px-4 py-3">Kateqoriya</th>
+                <th className="px-4 py-3">Rəng</th>
+                <th className="px-4 py-3">Ölçü</th>
+                <th className="px-4 py-3 text-center">Əməliyyat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!sablonlar || sablonlar.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                    Heç bir şablon tapılmadı
+                  </td>
+                </tr>
+              ) : (
+                sablonlar.map(s => {
+                  const kat = data.kateqoriyalar.find(k => k.id === Number(s.kateqoriya_id))?.nov_adi || '-';
+                  const rng = data.rengler.find(r => r.id === Number(s.reng_id))?.ad || '-';
+                  const olc = data.olculer.find(o => o.id === Number(s.olcu_id))?.ad || '-';
+                  return (
+                    <tr key={s.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 font-semibold">{s.sablon_adi}</td>
+                      <td className="px-4 py-3">{kat}</td>
+                      <td className="px-4 py-3">{rng}</td>
+                      <td className="px-4 py-3">{olc}</td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={async () => {
+                            const confirmed = await showConfirm('Şablonu sil', 'Bu şablonu silmək istədiyinizdən əminsiniz?');
+                            if (confirmed) deleteTemplate(s.id);
+                          }}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Məlumat İdarəetməsi */}

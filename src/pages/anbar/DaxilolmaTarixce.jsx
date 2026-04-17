@@ -7,13 +7,15 @@ function DaxilolmaTarixce() {
   const { data } = useData();
   const [baslama, setBaslama] = useState('');
   const [bitme, setBitme] = useState('');
+  const [qaimeKodu, setQaimeKodu] = useState('');
 
   const filtered = useMemo(() => {
     let filteredQaimeler = [...data.qaimeler];
     if (baslama) filteredQaimeler = filteredQaimeler.filter((q) => q.tarix >= baslama);
     if (bitme) filteredQaimeler = filteredQaimeler.filter((q) => q.tarix <= bitme);
+    if (qaimeKodu) filteredQaimeler = filteredQaimeler.filter((q) => q.qaime_kod?.toLowerCase().includes(qaimeKodu.toLowerCase()));
     return filteredQaimeler.sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
-  }, [data.qaimeler, baslama, bitme]);
+  }, [data.qaimeler, baslama, bitme, qaimeKodu]);
 
   const handleExport = () => {
     const ws_data = [
@@ -71,10 +73,15 @@ function DaxilolmaTarixce() {
               className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
-          <div className="flex items-end">
-            <button className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-              <i className="fas fa-search"></i> Axtar...
-            </button>
+          <div>
+            <label className="block text-sm mb-2">Qaimə Kodu</label>
+            <input
+              type="text"
+              value={qaimeKodu}
+              onChange={(e) => setQaimeKodu(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="Qaimə kodu..."
+            />
           </div>
         </div>
       </div>
@@ -108,8 +115,10 @@ function DaxilolmaTarixce() {
                     (sum, m) => sum + m.miqdar * m.alis_qiymeti,
                     0
                   );
+                  const varQaytarma = q.qaytarmalar?.length > 0 || parseFloat(q.qaytarilan_mebleg) > 0;
+                  const rowClass = varQaytarma ? 'bg-red-50' : '';
                   return (
-                    <tr key={q.id} className="border-b hover:bg-gray-50">
+                    <tr key={q.id} className={`border-b hover:bg-gray-50 ${rowClass}`}>
                       <td className="px-4 py-3">{q.qaime_kod}</td>
                       <td className="px-4 py-3">{new Date(q.tarix).toLocaleDateString('az-AZ')}</td>
                       <td className="px-4 py-3">{techizatci ? techizatci.ad : '-'}</td>

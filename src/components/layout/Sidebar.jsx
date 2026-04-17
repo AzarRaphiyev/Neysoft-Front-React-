@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUI } from '../../contexts/UIContext';
 
-const menuItems = [
+const allMenuItems = [
   { path: '/', icon: 'fas fa-chart-line', label: 'İdarə Paneli' },
   { path: '/anbar', icon: 'fas fa-warehouse', label: 'Ümumi Anbar' },
   { path: '/satis', icon: 'fas fa-shopping-cart', label: 'Satış' },
@@ -27,9 +27,19 @@ function Sidebar() {
   const currentRole = currentUser.role;
   const username = currentUser.username;
 
-  const items = [...menuItems];
-  if (currentRole === 'ADMIN' || currentRole === 'MANAGER') {
-    items.push({ path: '/users', icon: 'fas fa-users', label: 'İstifadəçilər' });
+  let items = [];
+  if (currentRole === 'ADMIN') {
+    items = [...allMenuItems, { path: '/users', icon: 'fas fa-users', label: 'İstifadəçilər' }];
+  } else if (currentRole === 'MANAGER') {
+    items = [...allMenuItems];
+  } else if (currentRole === 'CASHIER') {
+    items = [
+      { path: '/satis', icon: 'fas fa-shopping-cart', label: 'Satış' },
+      { path: '/satis-tarixce', icon: 'fas fa-history', label: 'Satış Tarixçəsi' },
+      { path: '/anbar', icon: 'fas fa-warehouse', label: 'Ümumi Anbar' },
+    ];
+  } else {
+    items = [...allMenuItems];
   }
 
   const handleNavigate = (path) => {
@@ -62,7 +72,7 @@ function Sidebar() {
         <div className="p-4 relative">
           <button
             onClick={toggleSidebar}
-            className="md:hidden absolute -top-2 -right-2 text-white hover:text-gray-200 p-2 bg-red-500 rounded-full w-9 h-9 flex items-center justify-center shadow-lg z-50"
+            className="md:hidden absolute -top-[-9px] -right-0 text-white hover:text-red-500 text-red-400 font-xl    rounded-full w-10 h-10 flex items-center justify-center  z-50"
           >
             <i className="fas fa-times text-sm"></i>
           </button>
@@ -85,22 +95,24 @@ function Sidebar() {
           </div>
         </div>
         <div className="p-4 border-t border-blue-500 mt-auto flex flex-col gap-4">
-          <div className="bg-blue-700/50 p-3 rounded-xl border border-blue-500/30">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                <i className="fas fa-user"></i>
+          <div className="flex items-center justify-between bg-blue-700/50 p-3 rounded-xl border border-blue-500/30">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center font-bold uppercase">
+                {(currentUser.firstName?.[0] || currentUser.username?.[0] || 'U')}
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-sm leading-tight">{username}</span>
+                <span className="font-bold text-sm leading-tight">
+                  {currentUser.firstName && currentUser.lastName ? `${currentUser.firstName} ${currentUser.lastName}` : username}
+                </span>
                 <span className="text-xs text-blue-200 font-medium">{currentRole}</span>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition"
+              className="w-10 h-10 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+              title="Çıxış"
             >
               <i className="fas fa-sign-out-alt"></i>
-              <span>Çıxış</span>
             </button>
           </div>
 

@@ -11,13 +11,11 @@ export default function Login() {
         e.preventDefault();
         try {
             const data = await login(username, password);
-            const tokenToSave = data?.token || data?.accessToken || data?.access_token;
+            const tokenToSave = data?.access_token || data?.token || data?.accessToken;
             if (tokenToSave) {
                 localStorage.setItem('token', tokenToSave);
                 if (data.user) {
                     localStorage.setItem('user', JSON.stringify(data.user));
-                } else {
-                    localStorage.setItem('user', JSON.stringify(data));
                 }
                 window.location.href = '/';
             } else {
