@@ -163,8 +163,9 @@ export function DataProvider({ children }) {
 
   const updateSatisQiymeti = useCallback(async (barcode, newPrice) => {
     try {
-      await api.patch('/products/update-price', { barcode, salePrice: Number(newPrice) });
-      await fetchAnbar();
+      // Backend DTO: { barcode: string, newSalePrice: number }
+      await api.patch('/products/update-price', { barcode: String(barcode), newSalePrice: Number(newPrice) });
+      await fetchAnbar(); // Tabloyu yenile
     } catch (err) {
       console.error('updateSatisQiymeti Hatası:', err);
       throw err;
@@ -175,6 +176,7 @@ export function DataProvider({ children }) {
     try {
       await api.post('/products', productData);
       await fetchAnbar();
+      return true;
     } catch (e) {
       console.error('createProduct Hatası:', e);
       throw e;
@@ -185,9 +187,9 @@ export function DataProvider({ children }) {
     try {
       // qaimeData formatı: { techizatci_id, mehsullar: [{ productId, quantity, purchasePrice }] }
       const payload = {
-        supplierId: Number(qaimeData.techizatci_id),
+        supplierId: String(qaimeData.techizatci_id),
         items: qaimeData.mehsullar.map(m => ({
-          productId: m.productId,
+          productId: String(m.productId),
           quantity: Number(m.miqdar),
           purchasePrice: Number(m.alis_qiymeti)
         }))
@@ -281,6 +283,25 @@ export function DataProvider({ children }) {
     } catch (e) { console.error(e); }
   }, [fetchParameters]);
 
+  const returnCustomerSale = useCallback(async (saleId, reason, items) => {
+    try {
+      const payload = {
+        saleId: String(saleId),
+        reason: reason || "Səbəb qeyd edilməyib",
+        items: items.map(item => ({
+          productId: String(item.productId),
+          quantity: Number(item.quantity),
+          refundAmount: Number(item.refundAmount)
+        }))
+      };
+      await api.post('/returns/customer', payload);
+      await fetchAnbar();
+    } catch (err) {
+      console.error('İade hatası:', err);
+      throw err;
+    }
+  }, [fetchAnbar]);
+
   const clearAll = useCallback(() => {
     setData({
       anbar: [],
@@ -334,6 +355,7 @@ export function DataProvider({ children }) {
         fetchQaimeler,
         updateSatisQiymeti,
         createProduct,
+        returnCustomerSale,
       }}
     >
       {children}

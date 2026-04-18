@@ -6,14 +6,54 @@ import Modal from '../components/common/Modal';
 import * as XLSX from 'xlsx';
 
 function SatisTarixce() {
-  const { data } = useData();
+  const { data, returnCustomerSale } = useData();
   const ui = useUI();
-  const { openModal } = ui;
+  const { openModal, showToast } = ui;
   const [baslama, setBaslama] = useState('');
   const [bitme, setBitme] = useState('');
   const [qebzNo, setQebzNo] = useState('');
   const [yalnizQaytarilanlar, setYalnizQaytarilanlar] = useState(false);
   const [selectedSatis, setSelectedSatis] = useState(null);
+  const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+
+  const [iadeSatis, setIadeSatis] = useState(null);
+  const [iadeMehsullar, setIadeMehsullar] = useState([]);
+  const [iadeSebep, setIadeSebep] = useState('');
+
+  const handleIadeAc = (satis) => {
+    setIadeSatis(satis);
+    const mehsullarIcin = satis.mehsullar.map(m => ({
+      ...m,
+      iadeMiqdar: 0,
+      iadeMebleg: 0
+    }));
+    setIadeMehsullar(mehsullarIcin);
+    setIadeSebep('');
+    openModal('iade');
+  };
+
+  const handleIadeTesdiq = async () => {
+    const secilenUrunler = iadeMehsullar
+      .filter(m => m.iadeMiqdar > 0)
+      .map(m => ({
+        productId: m.mal_id,
+        quantity: Number(m.iadeMiqdar),
+        refundAmount: Number(m.iadeMebleg)
+      }));
+
+    if (secilenUrunler.length === 0) {
+      showToast('Heç bir məhsul seçilməyib', 'warning');
+      return;
+    }
+
+    try {
+      await returnCustomerSale(iadeSatis.id || iadeSatis.qebz_nomre, iadeSebep, secilenUrunler);
+      ui.closeModal();
+      showToast('Müştəri iadəsi uğurla tamamlandı', 'success');
+    } catch (err) {
+      showToast('İadə zamanı xəta baş verdi', 'error');
+    }
+  };
 
   const filtered = useMemo(() => {
     let filteredSatislar = [...data.satislar];
@@ -239,10 +279,17 @@ function SatisTarixce() {
                             setSelectedSatis(s);
                             openModal('qebz');
                           }}
-                          className="text-green-600 hover:text-green-800"
+                          className="text-green-600 hover:text-green-800 mr-2"
                           title="Qəbz"
                         >
                           <i className="fas fa-print"></i>
+                        </button>
+                        <button
+                          onClick={() => handleIadeAc(s)}
+                          className="text-red-500 hover:text-red-700"
+                          title="İadə Et"
+                        >
+                          <i className="fas fa-undo"></i>
                         </button>
                       </td>
                     </tr>
@@ -347,57 +394,174 @@ function SatisTarixce() {
           </div>
         }
       >
-        {selectedSatis && (
-          <div className="print-area">
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold">{data.magazaMelumat.ad}</h2>
-              <p className="text-sm text-gray-600">{data.magazaMelumat.unvan}</p>
-              <p className="text-sm text-gray-600">Tel: {data.magazaMelumat.telefon}</p>
-              <div className="border-t border-b py-3 my-3">
-                <p className="text-sm">
-                  <strong>Qəbz №:</strong> {selectedSatis.qebz_nomre}
-                </p>
-                <p className="text-sm">
-                  <strong>Tarix:</strong> {new Date(selectedSatis.tarix).toLocaleString('az-AZ')}
-                </p>
+        <div id="qebz-content" className="print-area font-mono text-gray-800 bg-white p-4 max-w-[320px] mx-auto border border-dashed border-gray-400 shadow-sm">
+          {selectedSatis && (
+            <>
+              <div className="text-center mb-4 border-b border-dashed border-gray-400 pb-4">
+                <h2 className="text-2xl font-black uppercase tracking-wider mb-1">
+                  {data.magazaMelumat?.ad || "NEYSOFT POS"}
+                </h2>
+                {data.magazaMelumat?.unvan && <p className="text-xs font-semibold">{data.magazaMelumat.unvan}</p>}
+                {data.magazaMelumat?.telefon && <p className="text-xs font-semibold mt-1">Tel: {data.magazaMelumat.telefon}</p>}
+                {/* Təkrar Çap Bildirişi */}
+                <p className="text-[10px] font-bold mt-2 bg-gray-100 py-1 uppercase tracking-widest text-gray-500">** Təkrar Çap **</p>
               </div>
-              <table className="w-full text-sm mb-3">
-                <thead className="border-b">
+
+              <div className="mb-4 text-xs space-y-1.5 font-semibold">
+                <div className="flex justify-between"><span>Tarix:</span> <span>{new Date(selectedSatis.tarix).toLocaleString('az-AZ')}</span></div>
+                <div className="flex justify-between"><span>Qəbz №:</span> <span>{selectedSatis.qebz_nomre}</span></div>
+                <div className="flex justify-between"><span>Kassir:</span> <span className="uppercase">{currentUser.username || currentUser.name || 'Admin'}</span></div>
+              </div>
+
+              {(selectedSatis.musteri_ad || selectedSatis.musteri_tel) && (
+                <div className="mb-4 text-xs border-y border-dashed border-gray-400 py-3 space-y-1.5 font-semibold bg-gray-50 px-2">
+                  {selectedSatis.musteri_ad && <div className="flex justify-between"><span>Müştəri:</span> <span>{selectedSatis.musteri_ad}</span></div>}
+                  {selectedSatis.musteri_tel && <div className="flex justify-between"><span>Əlaqə:</span> <span>{selectedSatis.musteri_tel}</span></div>}
+                </div>
+              )}
+
+              <table className="w-full text-xs mb-4">
+                <thead className="border-b border-gray-800">
                   <tr>
-                    <th className="text-left py-1">Məhsul</th>
-                    <th className="text-right py-1">Qiymət</th>
+                    <th className="text-left py-1.5 w-1/2 uppercase">Məhsul</th>
+                    <th className="text-center py-1.5 uppercase">Miq</th>
+                    <th className="text-right py-1.5 uppercase">Məbləğ</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="font-semibold">
                   {selectedSatis.mehsullar.map((m, idx) => (
-                    <tr key={idx} className="border-b">
-                      <td className="py-2">
+                    <tr key={idx} className="border-b border-gray-200 last:border-0">
+                      <td className="py-2 pr-1 break-words">
                         {m.mal_adi}
-                        <br />
-                        <span className="text-xs text-gray-600">
-                          {m.miqdar} x {formatMebleg(m.satis_qiymeti)}
-                        </span>
+                        {m.endirim > 0 && <div className="text-[10px] text-gray-500 font-normal">(-{m.endirim}₼ endirim)</div>}
                       </td>
-                      <td className="text-right py-2 font-semibold">
-                        {formatMebleg(m.yekun_mebleg)}
-                      </td>
+                      <td className="text-center py-2 align-top">{m.miqdar}</td>
+                      <td className="text-right py-2 align-top">{formatMebleg(m.yekun_mebleg)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="border-t pt-3">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>YEKUN:</span>
-                  <span>{formatMebleg(selectedSatis.yekun_mebleg)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Ödəniş:</span>
-                  <span>{selectedSatis.odenis_nov}</span>
+
+              <div className="border-t border-dashed border-gray-400 pt-3 space-y-1.5 text-xs font-bold">
+                <div className="flex justify-between text-gray-600"><span>Ara Cəmi:</span> <span>{formatMebleg(selectedSatis.umumi_mebleg)}</span></div>
+                {selectedSatis.umumi_endirim > 0 && (
+                  <div className="flex justify-between text-red-600"><span>Endirim:</span> <span>-{formatMebleg(selectedSatis.umumi_endirim)}</span></div>
+                )}
+                <div className="flex justify-between text-lg mt-2 pt-2 border-t border-gray-800">
+                  <span>YEKUN:</span> <span>{formatMebleg(selectedSatis.yekun_mebleg)}</span>
                 </div>
               </div>
-            </div>
+
+              <div className="mt-4 border-t border-gray-800 pt-3 text-xs space-y-1.5 font-bold">
+                <div className="flex justify-between"><span>Ödəniş növü:</span> <span className="uppercase">{selectedSatis.odenis_nov === 'kart' ? 'Kart' : 'Nağd'}</span></div>
+                {selectedSatis.odenisMebleg > 0 && (
+                  <>
+                    <div className="flex justify-between text-gray-600"><span>Ödənilib:</span> <span>{formatMebleg(selectedSatis.odenisMebleg)}</span></div>
+                    <div className="flex justify-between"><span>Qalıq:</span> <span>{formatMebleg(selectedSatis.qaliqMebleg)}</span></div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-6 text-center text-xs font-bold italic uppercase border-t border-dashed border-gray-400 pt-4">
+                Bizi seçdiyiniz üçün <br /> təşəkkür edirik!
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
+
+      {/* İadə Modalı */}
+      <Modal
+        isOpen={ui.activeModal === 'iade'}
+        onClose={() => ui.closeModal()}
+        title="Müştəri İadəsi"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => ui.closeModal()}
+              className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium"
+            >
+              Ləğv Et
+            </button>
+            <button
+              onClick={handleIadeTesdiq}
+              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 font-medium whitespace-nowrap"
+            >
+              <i className="fas fa-check mr-2"></i>Təsdiqlə
+            </button>
           </div>
-        )}
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold mb-2">İadə Səbəbi</label>
+            <input
+              type="text"
+              value={iadeSebep}
+              onChange={(e) => setIadeSebep(e.target.value)}
+              placeholder="Məsələn: Zədəli məhsul"
+              className="w-full px-4 py-2 border rounded-lg"
+            />
+          </div>
+          <div className="border border-gray-200 rounded-lg overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-100 border-b">
+                <tr>
+                  <th className="px-3 py-2 text-left">Məhsul</th>
+                  <th className="px-3 py-2 text-center">Satılan</th>
+                  <th className="px-3 py-2 text-center whitespace-nowrap">İadə Miqdar</th>
+                  <th className="px-3 py-2 text-center whitespace-nowrap">Qaytarılacaq ₼</th>
+                </tr>
+              </thead>
+              <tbody>
+                {iadeMehsullar.map((m, idx) => (
+                  <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="px-3 py-2 align-middle">
+                      <div className="font-medium text-gray-800">{m.mal_adi}</div>
+                      <div className="text-xs text-gray-500">{(Number(m.yekun_mebleg) / Number(m.miqdar)).toFixed(2)} ₼ (ədəd)</div>
+                    </td>
+                    <td className="px-3 py-2 text-center align-middle font-bold text-gray-700">{m.miqdar}</td>
+                    <td className="px-3 py-2 align-middle max-w-[100px]">
+                      <input
+                        type="number"
+                        min="0"
+                        max={m.miqdar}
+                        value={m.iadeMiqdar === 0 ? '' : m.iadeMiqdar}
+                        onChange={(e) => {
+                          let val = parseInt(e.target.value) || 0;
+                          if (val > m.miqdar) val = m.miqdar;
+                          if (val < 0) val = 0;
+                          const yeniListe = [...iadeMehsullar];
+                          yeniListe[idx].iadeMiqdar = val;
+                          yeniListe[idx].iadeMebleg = val * (Number(m.yekun_mebleg) / Number(m.miqdar));
+                          setIadeMehsullar(yeniListe);
+                        }}
+                        placeholder="0"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-center focus:ring-red-500 focus:border-red-500"
+                      />
+                    </td>
+                    <td className="px-3 py-2 align-middle max-w-[120px]">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={m.iadeMebleg === 0 ? '' : m.iadeMebleg}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          const yeniListe = [...iadeMehsullar];
+                          yeniListe[idx].iadeMebleg = val;
+                          setIadeMehsullar(yeniListe);
+                        }}
+                        placeholder="0.00"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-center focus:ring-red-500 focus:border-red-500"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </Modal>
     </div>
   );

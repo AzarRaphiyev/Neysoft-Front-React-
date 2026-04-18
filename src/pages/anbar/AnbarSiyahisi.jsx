@@ -122,7 +122,7 @@ function AnbarSiyahisi() {
                 <th className="px-4 py-3 text-left">Növ</th>
                 <th className="px-4 py-3 text-left">Rəng</th>
                 <th className="px-4 py-3 text-left">Ölçü</th>
-                <th className="px-4 py-3 text-right">Qalıq</th>
+                <th className="px-4 py-3 text-center">Qalıq</th>
                 <th className="px-4 py-3 text-right">Alış Qiyməti</th>
                 <th className="px-4 py-3 text-right">Satış Qiyməti</th>
                 <th className="px-4 py-3 text-right">Ümumi Dəyər</th>
@@ -138,12 +138,12 @@ function AnbarSiyahisi() {
                 </tr>
               ) : (
                 filtered.map((m) => {
-                  const rowClass = m.qaliq === 0 ? 'stok-sifir' : m.qaliq <= 5 ? 'stok-az' : '';
+                  const rowClass = m.qaliq === 0 ? 'bg-red-50' : m.qaliq <= 5 ? 'bg-yellow-50' : 'hover:bg-gray-50';
                   const eId = `exp-${m.id}`;
                   return (
                     <React.Fragment key={m.id}>
                       <tr
-                        className={`border-b hover:bg-gray-50 cursor-pointer ${rowClass}`}
+                        className={`border-b cursor-pointer ${rowClass}`}
                         onClick={(e) => {
                           const el = document.getElementById(eId);
                           if (el) el.classList.toggle('hidden');
@@ -155,18 +155,25 @@ function AnbarSiyahisi() {
                         <td className="px-4 py-3">
                           {m.reng_kod ? (
                             <span className="inline-flex items-center gap-1">
-                              <span
-                                className="w-4 h-4 rounded border"
-                                style={{ backgroundColor: m.reng_kod }}
-                              ></span>
+                              <span className="w-4 h-4 rounded border" style={{ backgroundColor: m.reng_kod }}></span>
                               {m.reng_adi}
                             </span>
+                          ) : m.reng_adi && m.reng_adi !== '-' ? (
+                            <span>{m.reng_adi}</span>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
                         </td>
                         <td className="px-4 py-3">{m.olcu_adi || '-'}</td>
-                        <td className="px-4 py-3 text-right font-semibold">{m.qaliq}</td>
+                        <td className="px-4 py-3 text-center">
+                          {m.qaliq === 0 ? (
+                            <span className="bg-red-100 text-red-700 font-bold px-2 py-1 rounded-full">{m.qaliq} (Bitib)</span>
+                          ) : m.qaliq <= 5 ? (
+                            <span className="bg-yellow-100 text-yellow-700 font-bold px-2 py-1 rounded-full">{m.qaliq} (Az)</span>
+                          ) : (
+                            <span className="bg-green-100 text-green-700 font-semibold px-2 py-1 rounded-full">{m.qaliq}</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-right">{formatMebleg(m.alis_qiymeti)}</td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">

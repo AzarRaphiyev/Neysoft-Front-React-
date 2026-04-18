@@ -3,11 +3,13 @@ import MalDaxil from './MalDaxil';
 import DaxilolmaTarixce from './DaxilolmaTarixce';
 import AnbarSiyahisi from './AnbarSiyahisi';
 import YeniMehsul from './YeniMehsul';
+import Mehsullar from './Mehsullar';
 
 function UmumiAnbar() {
   const [activeTab, setActiveTab] = useState('malDaxil');
 
   const tabs = [
+    { id: 'mehsullar', icon: 'fas fa-box', label: 'Məhsullar' },
     { id: 'yeniMehsul', icon: 'fas fa-box-open', label: 'Yeni Məhsul' },
     { id: 'malDaxil', icon: 'fas fa-plus', label: 'Mal Daxil Et' },
     { id: 'daxilolmaTarixce', icon: 'fas fa-clipboard-list', label: 'Daxil Olma Tarixçəsi' },
@@ -37,6 +39,7 @@ function UmumiAnbar() {
       </div>
 
       {/* Tab Content */}
+      {activeTab === 'mehsullar' && <Mehsullar />}
       {activeTab === 'yeniMehsul' && <YeniMehsul />}
       {activeTab === 'malDaxil' && <MalDaxil />}
       {activeTab === 'daxilolmaTarixce' && <DaxilolmaTarixce />}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useUI } from '../../contexts/UIContext';
+import { formatWord } from '../../utils/helpers';
 
 function YeniMehsul() {
     const { data, createProduct } = useData();
@@ -13,6 +14,9 @@ function YeniMehsul() {
     const [rengId, setRengId] = useState('');
     const [olcuId, setOlcuId] = useState('');
     const [satisQiymeti, setSatisQiymeti] = useState('');
+    const [alisQiymeti, setAlisQiymeti] = useState('');
+    const [miqdar, setMiqdar] = useState('');
+    const [techizatciId, setTechizatciId] = useState('');
 
     const handleYaddaSaxla = async () => {
         const errors = [];
@@ -28,12 +32,15 @@ function YeniMehsul() {
         }
 
         const payload = {
-            barcode: barkod || 'ML-' + Date.now(),
-            name: malAd,
-            categoryId: Number(novId),
-            colorId: rengId ? Number(rengId) : undefined,
-            sizeId: Number(olcuId),
-            salePrice: Number(satisQiymeti)
+            barcode: barkod || Date.now().toString(),
+            name: formatWord(malAd),
+            stockQuantity: Number(miqdar) || 0,
+            purchasePrice: Number(alisQiymeti) || 0,
+            salePrice: Number(satisQiymeti) || 0,
+            categoryId: novId,
+            colorId: rengId || null,
+            sizeId: olcuId || null,
+            supplierId: techizatciId || null
         };
 
         try {
@@ -45,6 +52,9 @@ function YeniMehsul() {
             setRengId('');
             setOlcuId('');
             setSatisQiymeti('');
+            setAlisQiymeti('');
+            setMiqdar('');
+            setTechizatciId('');
         } catch (err) {
             showToast('Məhsul yaradılarkən xəta baş verdi', 'error');
         }
@@ -56,12 +66,12 @@ function YeniMehsul() {
                 <i className="fas fa-box-open"></i> Yeni Məhsul Yarat
             </h2>
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div className="md:col-span-2">
                         <label className="block text-sm mb-1">Barkod</label>
-                        <input type="text" value={barkod} onChange={(e) => setBarkod(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Barkod" />
+                        <input type="text" value={barkod} onChange={(e) => setBarkod(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Barkod (Boş qoyula bilər)" />
                     </div>
-                    <div>
+                    <div className="md:col-span-2">
                         <label className="block text-sm mb-1">Malın Adı *</label>
                         <input type="text" value={malAd} onChange={(e) => setMalAd(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Malın Adı" />
                     </div>
@@ -85,6 +95,21 @@ function YeniMehsul() {
                             <option value="">Seçin...</option>
                             {data.olculer.map((o) => <option key={o.id} value={o.id}>{o.ad}</option>)}
                         </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm mb-1">Təchizatçı</label>
+                        <select value={techizatciId} onChange={(e) => setTechizatciId(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Seçin (istəyə bağlı)...</option>
+                            {data.techizatcilar.map((t) => <option key={t.id} value={t.id}>{t.ad}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm mb-1">İlkin Qalıq (Miqdar)</label>
+                        <input type="number" value={miqdar} onChange={(e) => setMiqdar(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Miqdar" min="0" />
+                    </div>
+                    <div>
+                        <label className="block text-sm mb-1">Alış Qiyməti</label>
+                        <input type="number" step="0.01" value={alisQiymeti} onChange={(e) => setAlisQiymeti(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Alış Qiyməti" />
                     </div>
                     <div>
                         <label className="block text-sm mb-1">Satış Qiyməti *</label>

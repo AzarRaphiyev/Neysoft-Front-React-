@@ -13,6 +13,7 @@ function Satis() {
   const [axtar, setAxtar] = useState('');
   const [odenisNov, setOdenisNov] = useState('Nağd');
   const [odenisMebleg, setOdenisMebleg] = useState('');
+  const currentUser = JSON.parse(localStorage.getItem('user')) || {};
 
   const filteredMehsullar = useMemo(() => {
     const search = axtar.toLowerCase();
@@ -541,70 +542,83 @@ function Satis() {
           </div>
         }
       >
-        <div id="qebz-content" className="print-area">
+        <div id="qebz-content" className="print-area font-mono text-gray-800 bg-white p-4 max-w-[320px] mx-auto border border-dashed border-gray-400 shadow-sm">
           {ui.modalData && (
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold">{data.magazaMelumat.ad}</h2>
-              <p className="text-sm text-gray-600">{data.magazaMelumat.unvan}</p>
-              <p className="text-sm text-gray-600">Tel: {data.magazaMelumat.telefon}</p>
-              <div className="border-t border-b py-3 my-3">
-                <p className="text-sm">
-                  <strong>Qəbz №:</strong> {ui.modalData.qebz_nomre}
-                </p>
-                <p className="text-sm">
-                  <strong>Tarix:</strong> {new Date(ui.modalData.tarix).toLocaleString('az-AZ')}
-                </p>
-                {ui.modalData.musteri_ad && (
-                  <p className="text-sm">
-                    <strong>Müştəri:</strong> {ui.modalData.musteri_ad}
-                  </p>
-                )}
+            <>
+              {/* Mağaza Məlumatları */}
+              <div className="text-center mb-4 border-b border-dashed border-gray-400 pb-4">
+                <h2 className="text-2xl font-black uppercase tracking-wider mb-1">
+                  {data.magazaMelumat?.ad || "NEYSOFT POS"}
+                </h2>
+                {data.magazaMelumat?.unvan && <p className="text-xs font-semibold">{data.magazaMelumat.unvan}</p>}
+                {data.magazaMelumat?.telefon && <p className="text-xs font-semibold mt-1">Tel: {data.magazaMelumat.telefon}</p>}
               </div>
-              <table className="w-full text-sm mb-3">
-                <thead className="border-b">
+
+              {/* Meta Məlumatlar (Qəbz, Tarix, Kassir) */}
+              <div className="mb-4 text-xs space-y-1.5 font-semibold">
+                <div className="flex justify-between"><span>Tarix:</span> <span>{new Date(ui.modalData.tarix).toLocaleString('az-AZ')}</span></div>
+                <div className="flex justify-between"><span>Qəbz №:</span> <span>{ui.modalData.qebz_nomre}</span></div>
+                <div className="flex justify-between"><span>Kassir:</span> <span className="uppercase">{currentUser.username || currentUser.name || 'Admin'}</span></div>
+              </div>
+
+              {/* Müştəri Məlumatları */}
+              {(ui.modalData.musteri_ad || ui.modalData.musteri_tel) && (
+                <div className="mb-4 text-xs border-y border-dashed border-gray-400 py-3 space-y-1.5 font-semibold bg-gray-50 px-2">
+                  {ui.modalData.musteri_ad && <div className="flex justify-between"><span>Müştəri:</span> <span>{ui.modalData.musteri_ad}</span></div>}
+                  {ui.modalData.musteri_tel && <div className="flex justify-between"><span>Əlaqə:</span> <span>{ui.modalData.musteri_tel}</span></div>}
+                </div>
+              )}
+
+              {/* Məhsullar Cədvəli */}
+              <table className="w-full text-xs mb-4">
+                <thead className="border-b border-gray-800">
                   <tr>
-                    <th className="text-left py-1">Məhsul</th>
-                    <th className="text-right py-1">Qiymət</th>
+                    <th className="text-left py-1.5 w-1/2 uppercase">Məhsul</th>
+                    <th className="text-center py-1.5 uppercase">Miq</th>
+                    <th className="text-right py-1.5 uppercase">Məbləğ</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="font-semibold">
                   {ui.modalData.mehsullar.map((m, idx) => (
-                    <tr key={idx} className="border-b">
-                      <td className="py-2">
+                    <tr key={idx} className="border-b border-gray-200 last:border-0">
+                      <td className="py-2 pr-1 break-words">
                         {m.mal_adi}
-                        <br />
-                        <span className="text-xs text-gray-600">
-                          {m.miqdar} x {formatMebleg(m.satis_qiymeti)}
-                        </span>
+                        {m.endirim > 0 && <div className="text-[10px] text-gray-500 font-normal">(-{m.endirim}₼ endirim)</div>}
                       </td>
-                      <td className="text-right py-2 font-semibold">
-                        {formatMebleg(m.yekun_mebleg)}
-                      </td>
+                      <td className="text-center py-2 align-top">{m.miqdar}</td>
+                      <td className="text-right py-2 align-top">{formatMebleg(m.yekun_mebleg)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="border-t pt-3 space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>Ara Cəmi:</span>
-                  <span>{formatMebleg(ui.modalData.umumi_mebleg)}</span>
-                </div>
+
+              {/* Yekun və Hesablamalar */}
+              <div className="border-t border-dashed border-gray-400 pt-3 space-y-1.5 text-xs font-bold">
+                <div className="flex justify-between text-gray-600"><span>Ara Cəmi:</span> <span>{formatMebleg(ui.modalData.umumi_mebleg)}</span></div>
                 {ui.modalData.umumi_endirim > 0 && (
-                  <div className="flex justify-between text-sm text-red-600">
-                    <span>Endirim:</span>
-                    <span>-{formatMebleg(ui.modalData.umumi_endirim)}</span>
-                  </div>
+                  <div className="flex justify-between text-red-600"><span>Endirim:</span> <span>-{formatMebleg(ui.modalData.umumi_endirim)}</span></div>
                 )}
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>YEKUN:</span>
-                  <span>{formatMebleg(ui.modalData.yekun_mebleg)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Ödəniş:</span>
-                  <span>{ui.modalData.odenis_nov}</span>
+                <div className="flex justify-between text-lg mt-2 pt-2 border-t border-gray-800">
+                  <span>YEKUN:</span> <span>{formatMebleg(ui.modalData.yekun_mebleg)}</span>
                 </div>
               </div>
-            </div>
+
+              {/* Ödəniş və Qalıq */}
+              <div className="mt-4 border-t border-gray-800 pt-3 text-xs space-y-1.5 font-bold">
+                <div className="flex justify-between"><span>Ödəniş növü:</span> <span className="uppercase">{ui.modalData.odenis_nov === 'kart' ? 'Kart' : 'Nağd'}</span></div>
+                {ui.modalData.odenisMebleg > 0 && (
+                  <>
+                    <div className="flex justify-between text-gray-600"><span>Ödənilib:</span> <span>{formatMebleg(ui.modalData.odenisMebleg)}</span></div>
+                    <div className="flex justify-between"><span>Qalıq:</span> <span>{formatMebleg(ui.modalData.qaliqMebleg)}</span></div>
+                  </>
+                )}
+              </div>
+
+              {/* Təşəkkür mətni */}
+              <div className="mt-6 text-center text-xs font-bold italic uppercase border-t border-dashed border-gray-400 pt-4">
+                Bizi seçdiyiniz üçün <br /> təşəkkür edirik!
+              </div>
+            </>
           )}
         </div>
       </Modal>

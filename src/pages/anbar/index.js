@@ -3,3 +3,4 @@ export { default as YeniMehsul } from './YeniMehsul';
 export { default as MalDaxil } from './MalDaxil';
 export { default as DaxilolmaTarixce } from './DaxilolmaTarixce';
 export { default as AnbarSiyahisi } from './AnbarSiyahisi';
+export { default as Mehsullar } from './Mehsullar';
