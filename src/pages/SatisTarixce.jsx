@@ -3,18 +3,21 @@ import { useData } from '../contexts/DataContext';
 import { useUI } from '../contexts/UIContext';
 import { formatMebleg } from '../utils/helpers';
 import Modal from '../components/common/Modal';
+import api from '../utils/api';
 import * as XLSX from 'xlsx';
 
 function SatisTarixce() {
-  const { data, returnCustomerSale } = useData();
+  const { data, returnCustomerSale, fetchSatislar } = useData();
   const ui = useUI();
   const { openModal, showToast } = ui;
-  const [baslama, setBaslama] = useState('');
-  const [bitme, setBitme] = useState('');
-  const [qebzNo, setQebzNo] = useState('');
-  const [yalnizQaytarilanlar, setYalnizQaytarilanlar] = useState(false);
+  const [filterTarix, setFilterTarix] = useState('');
+  const [filterQebz, setFilterQebz] = useState('');
+  const [filterStatus, setFilterStatus] = useState('ALL');
   const [selectedSatis, setSelectedSatis] = useState(null);
-  const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+
+  React.useEffect(() => {
+    if (fetchSatislar) fetchSatislar();
+  }, [fetchSatislar]);
 
   const [iadeSatis, setIadeSatis] = useState(null);
   const [iadeMehsullar, setIadeMehsullar] = useState([]);
@@ -22,7 +25,7 @@ function SatisTarixce() {
 
   const handleIadeAc = (satis) => {
     setIadeSatis(satis);
-    const mehsullarIcin = satis.mehsullar.map(m => ({
+    const mehsullarIcin = (satis.mehsullar || satis.items || []).map(m => ({
       ...m,
       iadeMiqdar: 0,
       iadeMebleg: 0
@@ -33,13 +36,7 @@ function SatisTarixce() {
   };
 
   const handleIadeTesdiq = async () => {
-    const secilenUrunler = iadeMehsullar
-      .filter(m => m.iadeMiqdar > 0)
-      .map(m => ({
-        productId: m.mal_id,
-        quantity: Number(m.iadeMiqdar),
-        refundAmount: Number(m.iadeMebleg)
-      }));
+    const secilenUrunler = iadeMehsullar.filter(m => m.iadeMiqdar > 0);
 
     if (secilenUrunler.length === 0) {
       showToast('Heç bir məhsul seçilməyib', 'warning');
@@ -47,22 +44,46 @@ function SatisTarixce() {
     }
 
     try {
-      await returnCustomerSale(iadeSatis.id || iadeSatis.qebz_nomre, iadeSebep, secilenUrunler);
+      const payload = {
+        saleId: iadeSatis.id || iadeSatis.qebz_nomre,
+        reason: iadeSebep || 'Səbəb qeyd edilməyib',
+        items: secilenUrunler.map(item => ({
+          productId: item.productId || item.product?.id || item.mal_id,
+          quantity: item.iadeMiqdar,
+          refundAmount: Number(item.iadeMebleg)
+        }))
+      };
+
+      await api.post('/returns/customer', payload);
       ui.closeModal();
       showToast('Müştəri iadəsi uğurla tamamlandı', 'success');
+      if (fetchSatislar) fetchSatislar();
     } catch (err) {
       showToast('İadə zamanı xəta baş verdi', 'error');
     }
   };
 
   const filtered = useMemo(() => {
-    let filteredSatislar = [...data.satislar];
-    if (baslama) filteredSatislar = filteredSatislar.filter((s) => s.tarix >= baslama);
-    if (bitme) filteredSatislar = filteredSatislar.filter((s) => s.tarix <= bitme + 'T23:59:59');
-    if (qebzNo) filteredSatislar = filteredSatislar.filter((s) => s.qebz_nomre?.toLowerCase().includes(qebzNo.toLowerCase()));
-    if (yalnizQaytarilanlar) filteredSatislar = filteredSatislar.filter((s) => s.qaytarmalar && s.qaytarmalar.length > 0);
-    return filteredSatislar.sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
-  }, [data.satislar, baslama, bitme, qebzNo, yalnizQaytarilanlar]);
+    let filteredSatislar = [...(data.satislar || [])];
+
+    if (filterTarix) {
+      filteredSatislar = filteredSatislar.filter((s) => (s.createdAt || s.tarix || '').includes(filterTarix));
+    }
+
+    if (filterQebz) {
+      filteredSatislar = filteredSatislar.filter((s) => (s.receiptNo || s.qebz_nomre || '').toLowerCase().includes(filterQebz.toLowerCase()));
+    }
+
+    if (filterStatus !== 'ALL') {
+      if (filterStatus === 'RETURNED') {
+        filteredSatislar = filteredSatislar.filter((s) => s.status === 'RETURNED' || s.status?.includes('Qaytarıldı') || s.status?.includes('Qaytarma') || (s.qaytarmalar && s.qaytarmalar.length > 0));
+      } else if (filterStatus === 'COMPLETED') {
+        filteredSatislar = filteredSatislar.filter((s) => s.status === 'COMPLETED' || (!s.status?.includes('Qaytar') && (!s.qaytarmalar || s.qaytarmalar.length === 0)));
+      }
+    }
+
+    return filteredSatislar.sort((a, b) => new Date(b.createdAt || b.tarix || 0) - new Date(a.createdAt || a.tarix || 0));
+  }, [data.satislar, filterTarix, filterQebz, filterStatus]);
 
   const handleExport = () => {
     const ws_data = [
@@ -179,22 +200,13 @@ function SatisTarixce() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm mb-2">Başlama Tarixi</label>
+            <label className="block text-sm mb-2">Tarix</label>
             <input
               type="date"
-              value={baslama}
-              onChange={(e) => setBaslama(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg"
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-2">Bitmə Tarixi</label>
-            <input
-              type="date"
-              value={bitme}
-              onChange={(e) => setBitme(e.target.value)}
+              value={filterTarix}
+              onChange={(e) => setFilterTarix(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
@@ -202,20 +214,23 @@ function SatisTarixce() {
             <label className="block text-sm mb-2">Qəbz №</label>
             <input
               type="text"
-              value={qebzNo}
-              onChange={(e) => setQebzNo(e.target.value)}
+              value={filterQebz}
+              onChange={(e) => setFilterQebz(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg"
               placeholder="Qəbz nömrəsi..."
             />
           </div>
-          <div className="flex items-end">
-            <button
-              onClick={() => setYalnizQaytarilanlar(!yalnizQaytarilanlar)}
-              className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${yalnizQaytarilanlar ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+          <div>
+            <label className="block text-sm mb-2">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg"
             >
-              <i className="fas fa-undo mr-2"></i> Yalnız Qaytarılanlar
-            </button>
+              <option value="ALL">Hamısı</option>
+              <option value="COMPLETED">Satıldı</option>
+              <option value="RETURNED">Qaytarıldı</option>
+            </select>
           </div>
         </div>
       </div>
@@ -232,6 +247,7 @@ function SatisTarixce() {
                 <th className="px-4 py-3 text-right">Məbləğ</th>
                 <th className="px-4 py-3 text-right">Endirim</th>
                 <th className="px-4 py-3 text-right">Yekun</th>
+                <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Ödəniş</th>
                 <th className="px-4 py-3 text-center">Əməliyyat</th>
               </tr>
@@ -239,30 +255,43 @@ function SatisTarixce() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
                     Satış tapılmadı
                   </td>
                 </tr>
               ) : (
-                filtered.map((s) => {
-                  const varQaytarma = s.qaytarmalar && s.qaytarmalar.length > 0;
-                  const rowClass = varQaytarma ? 'bg-red-50' : '';
+                filtered.map((s, index) => {
+                  const isReturned = s.status === 'RETURNED' || s.status?.includes('Qaytar') || (s.qaytarmalar && s.qaytarmalar.length > 0);
+                  const rowClass = isReturned ? 'bg-red-50 text-gray-900' : '';
                   return (
-                    <tr key={s.id} className={`border-b hover:bg-gray-50 ${rowClass}`}>
+                    <tr key={s.id || index} className={`border-b hover:bg-gray-50 ${rowClass}`}>
                       <td className="px-4 py-3">
-                        {varQaytarma && <i className="fas fa-undo mr-1"></i>}
-                        {s.qebz_nomre}
+                        {isReturned && <i className="fas fa-undo mr-1 text-red-500"></i>}
+                        {s.receiptNo || s.qebz_nomre || '-'}
                       </td>
-                      <td className="px-4 py-3">{new Date(s.tarix).toLocaleDateString('az-AZ')}</td>
-                      <td className="px-4 py-3">{s.musteri_ad || '-'}</td>
-                      <td className="px-4 py-3 text-right">{formatMebleg(s.umumi_mebleg)}</td>
+                      <td className="px-4 py-3">
+                        {s.createdAt || s.date || s.tarix ? new Date(s.createdAt || s.date || s.tarix).toLocaleString('az-AZ') : '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {s.user ? `${s.user.firstName || ''} ${s.user.lastName || ''}`.trim() : (s.userId || s.musteri_ad || '-')}
+                      </td>
+                      <td className="px-4 py-3 text-right">{formatMebleg(s.totalAmount || s.umumi_mebleg || 0)}</td>
                       <td className="px-4 py-3 text-right text-red-600">
-                        {formatMebleg(s.umumi_endirim)}
+                        {formatMebleg(s.discount || s.umumi_endirim || 0)}
                       </td>
                       <td className="px-4 py-3 text-right font-bold text-blue-600">
-                        {formatMebleg(s.yekun_mebleg)}
+                        {s.finalAmount !== undefined ? `${s.finalAmount} AZN` : formatMebleg(s.yekun_mebleg || 0)}
                       </td>
-                      <td className="px-4 py-3">{s.odenis_nov}</td>
+                      <td className="px-4 py-3">
+                        {isReturned ? (
+                          <span className="text-red-600 font-bold">Qaytarılmış</span>
+                        ) : (
+                          <span className="text-gray-600 font-semibold">Satıldı</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {s.paymentMethod === 'CARD' ? 'Kart' : (s.paymentMethod === 'CASH' ? 'Nağd' : (s.paymentMethod || s.odenis_nov || '-'))}
+                      </td>
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => {
@@ -311,22 +340,22 @@ function SatisTarixce() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <strong>Qəbz №:</strong> {selectedSatis.qebz_nomre}
+                <strong>Qəbz №:</strong> {selectedSatis?.receiptNo || selectedSatis?.qebz_nomre || '-'}
               </div>
               <div>
-                <strong>Tarix:</strong> {new Date(selectedSatis.tarix).toLocaleString('az-AZ')}
+                <strong>Tarix:</strong> {selectedSatis?.date ? new Date(selectedSatis.date).toLocaleString('az-AZ') : (selectedSatis?.tarix ? new Date(selectedSatis.tarix).toLocaleString('az-AZ') : '-')}
               </div>
               <div>
-                <strong>Müştəri:</strong> {selectedSatis.musteri_ad || '-'}
+                <strong>Müştəri:</strong> {selectedSatis?.customer ? (selectedSatis.customer.firstName + ' ' + selectedSatis.customer.lastName) : 'Standart Müştəri'}
               </div>
               <div>
-                <strong>Telefon:</strong> {selectedSatis.musteri_tel || '-'}
+                <strong>Telefon:</strong> {selectedSatis?.customer?.phone || selectedSatis?.musteri_tel || '-'}
               </div>
               <div>
-                <strong>Ödəniş:</strong> {selectedSatis.odenis_nov}
+                <strong>Ödəniş:</strong> {selectedSatis?.paymentMethod === 'CARD' ? 'Kart' : (selectedSatis?.paymentMethod === 'CASH' ? 'Nağd' : (selectedSatis?.odenis_nov || '-'))}
               </div>
               <div>
-                <strong>Mənfəət:</strong> {formatMebleg(selectedSatis.menfeet)}
+                <strong>Mənfəət:</strong> {formatMebleg(selectedSatis?.menfeet || 0)}
               </div>
             </div>
             <div className="border-t pt-4">
@@ -342,16 +371,16 @@ function SatisTarixce() {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedSatis.mehsullar.map((m, idx) => (
+                  {(selectedSatis?.mehsullar || selectedSatis?.items || []).map((m, idx) => (
                     <tr key={idx} className="border-b">
-                      <td className="px-3 py-2">{m.mal_adi}</td>
-                      <td className="px-3 py-2 text-right">{m.miqdar}</td>
-                      <td className="px-3 py-2 text-right">{formatMebleg(m.satis_qiymeti)}</td>
+                      <td className="px-3 py-2">{m?.product?.name || m?.mal_adi || '-'}</td>
+                      <td className="px-3 py-2 text-right">{m?.quantity || m?.miqdar || 0}</td>
+                      <td className="px-3 py-2 text-right">{formatMebleg(m?.price || m?.satis_qiymeti || 0)}</td>
                       <td className="px-3 py-2 text-right text-red-600">
-                        {formatMebleg(m.endirim_mebleg)}
+                        {formatMebleg(m?.discount || m?.endirim_mebleg || 0)}
                       </td>
                       <td className="px-3 py-2 text-right font-semibold">
-                        {formatMebleg(m.yekun_mebleg)}
+                        {formatMebleg((m?.quantity * m?.price) || m?.totalPrice || m?.yekun_mebleg || 0)}
                       </td>
                     </tr>
                   ))}
@@ -362,7 +391,7 @@ function SatisTarixce() {
                       YEKUN:
                     </td>
                     <td className="px-3 py-2 text-right text-blue-600">
-                      {formatMebleg(selectedSatis.yekun_mebleg)}
+                      {formatMebleg(selectedSatis?.finalAmount || selectedSatis?.yekun_mebleg || 0)}
                     </td>
                   </tr>
                 </tfoot>
@@ -408,15 +437,15 @@ function SatisTarixce() {
               </div>
 
               <div className="mb-4 text-xs space-y-1.5 font-semibold">
-                <div className="flex justify-between"><span>Tarix:</span> <span>{new Date(selectedSatis.tarix).toLocaleString('az-AZ')}</span></div>
-                <div className="flex justify-between"><span>Qəbz №:</span> <span>{selectedSatis.qebz_nomre}</span></div>
-                <div className="flex justify-between"><span>Kassir:</span> <span className="uppercase">{currentUser.username || currentUser.name || 'Admin'}</span></div>
+                <div className="flex justify-between"><span>Tarix:</span> <span>{selectedSatis?.date ? new Date(selectedSatis.date).toLocaleString('az-AZ') : (selectedSatis?.tarix ? new Date(selectedSatis.tarix).toLocaleString('az-AZ') : '-')}</span></div>
+                <div className="flex justify-between"><span>Qəbz №:</span> <span>{selectedSatis?.receiptNo || selectedSatis?.qebz_nomre || '-'}</span></div>
+                <div className="flex justify-between"><span>Kassir:</span> <span className="uppercase">{selectedSatis?.user ? (selectedSatis.user.username || selectedSatis.user.firstName) : (selectedSatis?.kassir || '-')}</span></div>
               </div>
 
-              {(selectedSatis.musteri_ad || selectedSatis.musteri_tel) && (
+              {(selectedSatis?.customer || selectedSatis?.musteri_ad || selectedSatis?.musteri_tel) && (
                 <div className="mb-4 text-xs border-y border-dashed border-gray-400 py-3 space-y-1.5 font-semibold bg-gray-50 px-2">
-                  {selectedSatis.musteri_ad && <div className="flex justify-between"><span>Müştəri:</span> <span>{selectedSatis.musteri_ad}</span></div>}
-                  {selectedSatis.musteri_tel && <div className="flex justify-between"><span>Əlaqə:</span> <span>{selectedSatis.musteri_tel}</span></div>}
+                  <div className="flex justify-between"><span>Müştəri:</span> <span>{selectedSatis?.customer ? (selectedSatis.customer.firstName + ' ' + selectedSatis.customer.lastName) : 'Standart Müştəri'}</span></div>
+                  {(selectedSatis?.customer?.phone || selectedSatis?.musteri_tel) && <div className="flex justify-between"><span>Əlaqə:</span> <span>{selectedSatis?.customer?.phone || selectedSatis?.musteri_tel}</span></div>}
                 </div>
               )}
 
@@ -429,35 +458,35 @@ function SatisTarixce() {
                   </tr>
                 </thead>
                 <tbody className="font-semibold">
-                  {selectedSatis.mehsullar.map((m, idx) => (
+                  {(selectedSatis?.items || selectedSatis?.mehsullar || []).map((m, idx) => (
                     <tr key={idx} className="border-b border-gray-200 last:border-0">
                       <td className="py-2 pr-1 break-words">
-                        {m.mal_adi}
-                        {m.endirim > 0 && <div className="text-[10px] text-gray-500 font-normal">(-{m.endirim}₼ endirim)</div>}
+                        {m?.product?.name || m?.mal_adi || '-'}
+                        {(m?.discount > 0 || m?.endirim > 0) && <div className="text-[10px] text-gray-500 font-normal">(-{m?.discount || m?.endirim}₼ endirim)</div>}
                       </td>
-                      <td className="text-center py-2 align-top">{m.miqdar}</td>
-                      <td className="text-right py-2 align-top">{formatMebleg(m.yekun_mebleg)}</td>
+                      <td className="text-center py-2 align-top">{m?.quantity || m?.miqdar || 0}</td>
+                      <td className="text-right py-2 align-top">{formatMebleg((m?.quantity * m?.price) || m?.totalPrice || m?.yekun_mebleg || 0)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
               <div className="border-t border-dashed border-gray-400 pt-3 space-y-1.5 text-xs font-bold">
-                <div className="flex justify-between text-gray-600"><span>Ara Cəmi:</span> <span>{formatMebleg(selectedSatis.umumi_mebleg)}</span></div>
-                {selectedSatis.umumi_endirim > 0 && (
-                  <div className="flex justify-between text-red-600"><span>Endirim:</span> <span>-{formatMebleg(selectedSatis.umumi_endirim)}</span></div>
+                <div className="flex justify-between text-gray-600"><span>Ara Cəmi:</span> <span>{formatMebleg(selectedSatis?.totalAmount || selectedSatis?.umumi_mebleg || 0)}</span></div>
+                {(selectedSatis?.discount || selectedSatis?.umumi_endirim || 0) > 0 && (
+                  <div className="flex justify-between text-red-600"><span>Endirim:</span> <span>-{formatMebleg(selectedSatis?.discount || selectedSatis?.umumi_endirim || 0)}</span></div>
                 )}
                 <div className="flex justify-between text-lg mt-2 pt-2 border-t border-gray-800">
-                  <span>YEKUN:</span> <span>{formatMebleg(selectedSatis.yekun_mebleg)}</span>
+                  <span>YEKUN:</span> <span>{formatMebleg(selectedSatis?.finalAmount || selectedSatis?.yekun_mebleg || 0)}</span>
                 </div>
               </div>
 
               <div className="mt-4 border-t border-gray-800 pt-3 text-xs space-y-1.5 font-bold">
-                <div className="flex justify-between"><span>Ödəniş növü:</span> <span className="uppercase">{selectedSatis.odenis_nov === 'kart' ? 'Kart' : 'Nağd'}</span></div>
-                {selectedSatis.odenisMebleg > 0 && (
+                <div className="flex justify-between"><span>Ödəniş növü:</span> <span className="uppercase">{selectedSatis.paymentMethod === 'CARD' || selectedSatis.odenis_nov === 'kart' || selectedSatis.odenis_nov === 'Kart' ? 'Kart' : 'Nağd'}</span></div>
+                {(selectedSatis.paidAmount || selectedSatis.odenisMebleg || 0) > 0 && (
                   <>
-                    <div className="flex justify-between text-gray-600"><span>Ödənilib:</span> <span>{formatMebleg(selectedSatis.odenisMebleg)}</span></div>
-                    <div className="flex justify-between"><span>Qalıq:</span> <span>{formatMebleg(selectedSatis.qaliqMebleg)}</span></div>
+                    <div className="flex justify-between text-gray-600"><span>Ödənilib:</span> <span>{formatMebleg(selectedSatis.paidAmount || selectedSatis.odenisMebleg || 0)}</span></div>
+                    <div className="flex justify-between"><span>Qalıq:</span> <span>{formatMebleg(selectedSatis.changeAmount || selectedSatis.qaliqMebleg || 0)}</span></div>
                   </>
                 )}
               </div>
@@ -514,26 +543,28 @@ function SatisTarixce() {
                 </tr>
               </thead>
               <tbody>
-                {iadeMehsullar.map((m, idx) => (
+                {(iadeMehsullar || []).map((m, idx) => (
                   <tr key={idx} className="border-b last:border-0 hover:bg-gray-50">
                     <td className="px-3 py-2 align-middle">
-                      <div className="font-medium text-gray-800">{m.mal_adi}</div>
-                      <div className="text-xs text-gray-500">{(Number(m.yekun_mebleg) / Number(m.miqdar)).toFixed(2)} ₼ (ədəd)</div>
+                      <div className="font-medium text-gray-800">{m?.product?.name || m.mal_adi || 'Bilinməyən Məhsul'}</div>
+                      <div className="text-xs text-gray-500">{Number(m.price || (Number(m.yekun_mebleg) / Number(m.miqdar)) || 0).toFixed(2)} ₼ (ədəd)</div>
                     </td>
-                    <td className="px-3 py-2 text-center align-middle font-bold text-gray-700">{m.miqdar}</td>
+                    <td className="px-3 py-2 text-center align-middle font-bold text-gray-700">{m.quantity || m.miqdar || 0}</td>
                     <td className="px-3 py-2 align-middle max-w-[100px]">
                       <input
                         type="number"
                         min="0"
-                        max={m.miqdar}
+                        max={m.quantity || m.miqdar || 0}
                         value={m.iadeMiqdar === 0 ? '' : m.iadeMiqdar}
                         onChange={(e) => {
                           let val = parseInt(e.target.value) || 0;
-                          if (val > m.miqdar) val = m.miqdar;
+                          const maxQty = m.quantity || m.miqdar || 0;
+                          const unitPrice = m.price || (Number(m.yekun_mebleg) / Number(m.miqdar)) || 0;
+                          if (val > maxQty) val = maxQty;
                           if (val < 0) val = 0;
                           const yeniListe = [...iadeMehsullar];
                           yeniListe[idx].iadeMiqdar = val;
-                          yeniListe[idx].iadeMebleg = val * (Number(m.yekun_mebleg) / Number(m.miqdar));
+                          yeniListe[idx].iadeMebleg = val * unitPrice;
                           setIadeMehsullar(yeniListe);
                         }}
                         placeholder="0"

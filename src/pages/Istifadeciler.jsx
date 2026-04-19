@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
 import { useUI } from '../contexts/UIContext';
 import Modal from '../components/common/Modal';
@@ -17,21 +17,21 @@ function Istifadeciler() {
         role: ''
     });
 
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         try {
             setLoading(true);
             const res = await api.get('/auth/users', { params: { username: search } });
-            setUsers(res.data || []);
+            setUsers(res.data?.data || res.data || []);
         } catch (error) {
             showToast('İstifadəçilər yüklənərkən xəta baş verdi', 'error');
         } finally {
             setLoading(false);
         }
-    };
+    }, [search, showToast]);
 
     useEffect(() => {
         fetchUsers();
-    }, [search]); // Refetch on search change
+    }, [fetchUsers]); // Refetch on search change
 
     const handleAddSubmit = async (e) => {
         e.preventDefault();
@@ -83,7 +83,7 @@ function Istifadeciler() {
             </div>
 
             <div className="mb-2 text-right">
-                <span className="text-gray-500 text-sm font-semibold">Ümumi: {users.length} istifadəçi</span>
+                <span className="text-gray-500 text-sm font-semibold">Ümumi: {users?.length || 0} istifadəçi</span>
             </div>
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 {loading ? (
@@ -102,12 +102,12 @@ function Istifadeciler() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {(!users || users.length === 0) ? (
+                                {(!users || (users?.length || 0) === 0) ? (
                                     <tr>
                                         <td colSpan="6" className="px-6 py-8 text-center text-gray-500">İstifadəçi tapılmadı</td>
                                     </tr>
                                 ) : (
-                                    users.map((u, index) => (
+                                    (users || []).map((u, index) => (
                                         <tr key={u.id} className="hover:bg-gray-50 transition">
                                             <td className="px-6 py-4 text-gray-500 font-medium">{index + 1}</td>
                                             <td className="px-6 py-4 font-medium text-gray-800">{u.username}</td>

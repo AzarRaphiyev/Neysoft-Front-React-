@@ -7,15 +7,15 @@ function Maliyye() {
   const [activeTab, setActiveTab] = useState('umumi');
 
   const tabs = [
-    { id: 'umumi', icon: 'fas fa-chart-pie', label: '\u00DCmumi' },
-    { id: 'xercler', icon: 'fas fa-money-bill-wave', label: 'X\u0259rcl\u0259r' },
+    { id: 'umumi', icon: 'fas fa-chart-pie', label: 'Ümumi' },
+    { id: 'xercler', icon: 'fas fa-money-bill-wave', label: 'Xərclər' },
     { id: 'zHesabat', icon: 'fas fa-file-invoice', label: 'Z Hesabat' },
   ];
 
   return (
     <div>
       <h2 className="text-3xl font-bold text-gray-800 mb-6">
-        <i className="fas fa-wallet"></i> Maliyy\u0259
+        <i className="fas fa-wallet"></i> Maliyyə
       </h2>
 
       {/* Sub Navigation */}

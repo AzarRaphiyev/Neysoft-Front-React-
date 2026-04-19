@@ -8,6 +8,8 @@ function DaxilolmaTarixce() {
   const [baslama, setBaslama] = useState('');
   const [bitme, setBitme] = useState('');
   const [qaimeKodu, setQaimeKodu] = useState('');
+  const [selectedQaime, setSelectedQaime] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   React.useEffect(() => {
     fetchQaimeler(baslama, bitme, qaimeKodu);
@@ -24,12 +26,12 @@ function DaxilolmaTarixce() {
     ];
     filtered.forEach((q) => {
       const techizatci = data.techizatcilar.find((t) => t.id === parseInt(q.techizatci_id));
-      const umumi = q.mehsullar.reduce((sum, m) => sum + m.miqdar * m.alis_qiymeti, 0);
+      const umumi = q.totalAmount || (q.mehsullar || q.items || []).reduce((sum, m) => sum + (m.quantity || m.miqdar || 0) * (m.purchasePrice || m.alis_qiymeti || 0), 0);
       ws_data.push([
-        q.qaime_kod,
-        q.tarix,
-        techizatci ? techizatci.ad : '-',
-        q.mehsullar.length,
+        q.receiptCode || q.qaime_kod || '-',
+        q.date || q.tarix || '-',
+        q.supplier?.name || techizatci?.ad || '-',
+        (q.mehsullar || q.items || []).length,
         umumi,
       ]);
     });
@@ -98,6 +100,7 @@ function DaxilolmaTarixce() {
                 <th className="px-4 py-3 text-left">Təchizatçı</th>
                 <th className="px-4 py-3 text-right">Məhsul Sayı</th>
                 <th className="px-4 py-3 text-right">Ümumi Məbləğ</th>
+                <th className="px-4 py-3 text-center">Əməliyyat</th>
               </tr>
             </thead>
             <tbody>
@@ -112,19 +115,28 @@ function DaxilolmaTarixce() {
                   const techizatci = data.techizatcilar.find(
                     (t) => t.id === parseInt(q.techizatci_id)
                   );
-                  const umumi = q.mehsullar.reduce(
-                    (sum, m) => sum + m.miqdar * m.alis_qiymeti,
+                  const umumi = q.totalAmount || (q.mehsullar || q.items || []).reduce(
+                    (sum, m) => sum + (m.quantity || m.miqdar || 0) * (m.purchasePrice || m.alis_qiymeti || 0),
                     0
                   );
                   const varQaytarma = q.qaytarmalar?.length > 0 || parseFloat(q.qaytarilan_mebleg) > 0;
                   const rowClass = varQaytarma ? 'bg-red-50' : '';
                   return (
                     <tr key={q.id} className={`border-b hover:bg-gray-50 ${rowClass}`}>
-                      <td className="px-4 py-3">{q.qaime_kod}</td>
-                      <td className="px-4 py-3">{new Date(q.tarix).toLocaleDateString('az-AZ')}</td>
-                      <td className="px-4 py-3">{techizatci ? techizatci.ad : '-'}</td>
-                      <td className="px-4 py-3 text-right">{q.mehsullar.length}</td>
+                      <td className="px-4 py-3">{q.receiptCode || q.qaime_kod || '-'}</td>
+                      <td className="px-4 py-3">{new Date(q.date || q.tarix || new Date()).toLocaleDateString('az-AZ')}</td>
+                      <td className="px-4 py-3">{q.supplier?.name || techizatci?.ad || '-'}</td>
+                      <td className="px-4 py-3 text-right">{(q.mehsullar || q.items || []).length}</td>
                       <td className="px-4 py-3 text-right font-semibold">{formatMebleg(umumi)}</td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => { setSelectedQaime(q); setIsModalOpen(true); }}
+                          className="text-blue-500 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50 transition"
+                          title="Detallara Bax"
+                        >
+                          <i className="fas fa-eye"></i>
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
@@ -133,6 +145,59 @@ function DaxilolmaTarixce() {
           </table>
         </div>
       </div>
+
+      {isModalOpen && selectedQaime && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+              <h3 className="text-xl font-bold text-gray-800">Qaimə Detalları</h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-500 hover:text-red-500 p-2 transition"
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div><span className="block text-gray-500 text-xs uppercase mb-1">Qaimə Kodu</span><span className="font-semibold">{selectedQaime.receiptCode || selectedQaime.qaime_kod || '-'}</span></div>
+                <div><span className="block text-gray-500 text-xs uppercase mb-1">Tarix</span><span className="font-semibold">{new Date(selectedQaime.date || selectedQaime.tarix || new Date()).toLocaleDateString('az-AZ')}</span></div>
+                <div><span className="block text-gray-500 text-xs uppercase mb-1">Təchizatçı</span><span className="font-semibold">{selectedQaime.supplier?.name || data.techizatcilar.find((t) => t.id === parseInt(selectedQaime.techizatci_id))?.ad || '-'}</span></div>
+                <div><span className="block text-gray-500 text-xs uppercase mb-1">Status</span><span className="font-semibold">{selectedQaime.status || '-'}</span></div>
+              </div>
+              <table className="w-full text-left bg-white">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="py-2 px-3 text-sm font-semibold">Ad</th>
+                    <th className="py-2 px-3 text-center text-sm font-semibold">Miqdar</th>
+                    <th className="py-2 px-3 text-right text-sm font-semibold">Alış Qiyməti</th>
+                    <th className="py-2 px-3 text-right text-sm font-semibold">Yekun</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-sm">
+                  {(selectedQaime.items || selectedQaime.mehsullar || []).map((item, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="py-2 px-3">{item.product?.name || item.mal_adi || '-'}</td>
+                      <td className="py-2 px-3 text-center">{item.quantity || item.miqdar || 0}</td>
+                      <td className="py-2 px-3 text-right">{formatMebleg(item.purchasePrice || item.alis_qiymeti || 0)}</td>
+                      <td className="py-2 px-3 text-right font-medium">{formatMebleg((item.quantity || item.miqdar || 0) * (item.purchasePrice || item.alis_qiymeti || 0))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 border-t bg-gray-50 flex justify-between items-center text-lg">
+              <span className="text-gray-600 font-semibold text-sm">Ümumi Məbləğ:</span>
+              <span className="text-blue-600 font-bold">
+                {formatMebleg(
+                  selectedQaime.totalAmount ||
+                  (selectedQaime.items || selectedQaime.mehsullar || []).reduce((sum, m) => sum + (m.quantity || m.miqdar || 0) * (m.purchasePrice || m.alis_qiymeti || 0), 0)
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

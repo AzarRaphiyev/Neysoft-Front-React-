@@ -66,25 +66,81 @@ export function DataProvider({ children }) {
     });
   }, []);
 
-  const addSatis = useCallback((satis) => {
-    setData((prev) => {
-      const updated = {
-        ...prev,
-        satislar: [...prev.satislar, satis],
-        anbar: prev.anbar.map((m) => {
-          const satisMehsul = satis.mehsullar.find((sm) => sm.mal_id === m.id);
-          if (satisMehsul) {
-            return { ...m, qaliq: m.qaliq - satisMehsul.miqdar };
-          }
-          return m;
-        }),
-      };
-      saveData(updated);
-      return updated;
-    });
-    setSebet([]);
-    setUmumiEndirim({ tipi: null, deyer: 0 });
+  const fetchAnbar = useCallback(async (search = '', outOfStock = false, categoryId = '') => {
+    try {
+      const res = await api.get('/products', { params: { search, outOfStock, categoryId } });
+      const rawData = res.data?.data || res.data || [];
+      const mappedAnbar = rawData.map(item => ({
+        id: item.id,
+        mal_kod: item.barcode || '-',
+        mal_adi: item.name || '-',
+        nov_id: item.categoryId || null,
+        nov_adi: item.category?.name || '-',
+        reng_id: item.colorId || null,
+        reng_adi: item.color?.name || '-',
+        reng_kod: item.color?.hexCode || '',
+        olcu_id: item.sizeId || null,
+        olcu_adi: item.size?.name || '-',
+        qaliq: item.stockQuantity || 0,
+        alis_qiymeti: item.purchasePrice || 0,
+        satis_qiymeti: item.salePrice || 0,
+      }));
+      setData((prev) => ({ ...prev, anbar: mappedAnbar }));
+    } catch (err) {
+      console.error('fetchAnbar Hatası:', err);
+    }
   }, []);
+
+  const fetchSatislar = useCallback(async () => {
+    try {
+      const res = await api.get('/sales');
+      const salesData = res.data?.data || res.data || [];
+      setData((prev) => ({ ...prev, satislar: salesData }));
+    } catch (err) {
+      console.error('fetchSatislar Hatası:', err);
+    }
+  }, []);
+
+  const addSatis = useCallback(async (satisData) => {
+    try {
+      const payload = {
+        receiptNo: String(satisData.qebz_nomre || ''),
+        paymentMethod: satisData.odenis_nov === 'kart' || satisData.odenis_nov === 'Kart' ? 'CARD' : 'CASH',
+        customerName: satisData.musteri_ad || satisData.musteriAd || undefined,
+        customerPhone: satisData.musteri_tel || satisData.musteriTelefon || undefined,
+        totalAmount: Number(satisData.umumi_mebleg || 0),
+        discount: Number(satisData.umumi_endirim || 0),
+        finalAmount: Number(satisData.yekun_mebleg || 0),
+        paidAmount: Number(satisData.odenisMebleg || 0),
+        changeAmount: Number(satisData.qaliqMebleg || 0),
+        items: (satisData.mehsullar || []).map(m => ({
+          productId: String(m.mal_id || m.productId || m.id),
+          quantity: Number(m.miqdar || 1),
+          price: Number(m.satis_qiymeti || 0),
+          discount: Number(m.endirim_mebleg || 0),
+          totalPrice: Number(m.yekun_mebleg || 0)
+        }))
+      };
+      const res = await api.post('/sales', payload);
+      const gercekSatis = res.data?.data || res.data;
+      
+      setData((prev) => ({
+        ...prev,
+        satislar: [gercekSatis, ...(prev.satislar || [])]
+      }));
+
+      await fetchAnbar();
+      if (typeof fetchSatislar === 'function') await fetchSatislar();
+      
+      setSebet([]);
+      setUmumiEndirim({ tipi: null, deyer: 0 });
+      
+      return gercekSatis;
+    } catch (error) {
+      console.error('Satış hatası:', error);
+      throw error;
+    }
+  }, [fetchAnbar, fetchSatislar]);
 
   const addQaytarma = useCallback((satisId, qaytarma) => {
     setData((prev) => {
@@ -126,30 +182,6 @@ export function DataProvider({ children }) {
     });
   }, []);
 
-  const fetchAnbar = useCallback(async (search = '', outOfStock = false, categoryId = '') => {
-    try {
-      const res = await api.get('/products', { params: { search, outOfStock, categoryId } });
-      const rawData = res.data?.data || res.data || [];
-      const mappedAnbar = rawData.map(item => ({
-        id: item.id,
-        mal_kod: item.barcode || '-',
-        mal_adi: item.name || '-',
-        nov_id: item.categoryId || null,
-        nov_adi: item.category?.name || '-',
-        reng_id: item.colorId || null,
-        reng_adi: item.color?.name || '-',
-        reng_kod: item.color?.hexCode || '',
-        olcu_id: item.sizeId || null,
-        olcu_adi: item.size?.name || '-',
-        qaliq: item.stockQuantity || 0,
-        alis_qiymeti: item.purchasePrice || 0,
-        satis_qiymeti: item.salePrice || 0,
-      }));
-      setData((prev) => ({ ...prev, anbar: mappedAnbar }));
-    } catch (err) {
-      console.error('fetchAnbar Hatası:', err);
-    }
-  }, []);
 
   const fetchQaimeler = useCallback(async (startDate = '', endDate = '', receiptCode = '') => {
     try {
@@ -353,6 +385,7 @@ export function DataProvider({ children }) {
         clearAll,
         fetchAnbar,
         fetchQaimeler,
+        fetchSatislar,
         updateSatisQiymeti,
         createProduct,
         returnCustomerSale,

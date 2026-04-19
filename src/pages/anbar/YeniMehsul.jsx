@@ -31,6 +31,11 @@ function YeniMehsul() {
             return;
         }
 
+        if (!rengId) {
+            showToast("Zəhmət olmasa məhsulun rəngini seçin!", "error");
+            return;
+        }
+
         const payload = {
             barcode: barkod || Date.now().toString(),
             name: formatWord(malAd),
@@ -83,9 +88,9 @@ function YeniMehsul() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm mb-1">Rəng</label>
-                        <select value={rengId} onChange={(e) => setRengId(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
-                            <option value="">Seçin (istəyə bağlı)...</option>
+                        <label className="block text-sm mb-1">Rəng <span className="text-red-500">*</span></label>
+                        <select required value={rengId} onChange={(e) => setRengId(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Seçin...</option>
                             {data.rengler.map((r) => <option key={r.id} value={r.id}>{r.ad}</option>)}
                         </select>
                     </div>

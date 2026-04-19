@@ -7,6 +7,7 @@ const allMenuItems = [
   { path: '/anbar', icon: 'fas fa-warehouse', label: 'Ümumi Anbar' },
   { path: '/satis', icon: 'fas fa-shopping-cart', label: 'Satış' },
   { path: '/satis-tarixce', icon: 'fas fa-history', label: 'Satış Tarixçəsi' },
+  { path: '/musteri-iadeleri', icon: 'fas fa-undo', label: 'Müştəri İadələri' },
   { path: '/maliyye', icon: 'fas fa-wallet', label: 'Maliyyə' },
   { path: '/parametrler', icon: 'fas fa-cog', label: 'Parametrlər' },
 ];
@@ -36,6 +37,7 @@ function Sidebar() {
     items = [
       { path: '/satis', icon: 'fas fa-shopping-cart', label: 'Satış' },
       { path: '/satis-tarixce', icon: 'fas fa-history', label: 'Satış Tarixçəsi' },
+      { path: '/musteri-iadeleri', icon: 'fas fa-undo', label: 'Müştəri İadələri' },
       { path: '/anbar', icon: 'fas fa-warehouse', label: 'Ümumi Anbar' },
     ];
   } else {

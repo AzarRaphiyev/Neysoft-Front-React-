@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useUI } from '../../contexts/UIContext';
 import { formatMebleg, bugunISO, buAyISO } from '../../utils/helpers';
+import api from '../../utils/api';
 import * as XLSX from 'xlsx';
 
 function MaliyyeUmumi() {
@@ -10,79 +11,67 @@ function MaliyyeUmumi() {
   const [baslama, setBaslama] = useState(buAyISO() + '-01');
   const [bitme, setBitme] = useState(bugunISO());
 
-  const stats = useMemo(() => {
+  const [dailyStats, setDailyStats] = useState(null);
+  const [monthlyStats, setMonthlyStats] = useState(null);
+  const [customStats, setCustomStats] = useState(null);
+
+  React.useEffect(() => {
     const bugun = bugunISO();
     const buAy = buAyISO();
 
-    const gunlukSatislar = data.satislar.filter((s) => s.tarix.startsWith(bugun));
-    const gunlukGelir = gunlukSatislar.reduce((sum, s) => sum + s.yekun_mebleg, 0);
-    const gunlukMenfeet = gunlukSatislar.reduce((sum, s) => sum + s.menfeet, 0);
-    const gunlukXerc = data.xercler
-      .filter((x) => x.tarix === bugun)
-      .reduce((sum, x) => sum + x.mebleg, 0);
+    // Günlük API İstəyi
+    api.get('/reports/dashboard', { params: { startDate: bugun, endDate: bugun + 'T23:59:59' } })
+      .then(res => setDailyStats(res.data?.data || res.data))
+      .catch(() => { });
 
-    const ayliqSatislar = data.satislar.filter((s) => s.tarix.startsWith(buAy));
-    const ayliqGelir = ayliqSatislar.reduce((sum, s) => sum + s.yekun_mebleg, 0);
-    const ayliqMenfeet = ayliqSatislar.reduce((sum, s) => sum + s.menfeet, 0);
-    const ayliqXerc = data.xercler
-      .filter((x) => x.tarix.startsWith(buAy))
-      .reduce((sum, x) => sum + x.mebleg, 0);
+    // Aylıq API İstəyi
+    api.get('/reports/dashboard', { params: { startDate: buAy, endDate: bugun + 'T23:59:59' } })
+      .then(res => setMonthlyStats(res.data?.data || res.data))
+      .catch(() => { });
 
-    const gunlukGelirFoiz = ayliqGelir > 0 ? ((gunlukGelir / ayliqGelir) * 100).toFixed(1) : 0;
-    const gunlukMenfeetFoiz =
-      ayliqMenfeet > 0 ? ((gunlukMenfeet / ayliqMenfeet) * 100).toFixed(1) : 0;
+    fetchCustomStats();
+  }, []);
 
-    return {
-      gunlukGelir,
-      gunlukMenfeet,
-      gunlukXerc,
-      ayliqGelir,
-      ayliqMenfeet,
-      ayliqXerc,
-      gunlukGelirFoiz,
-      gunlukMenfeetFoiz,
-    };
-  }, [data.satislar, data.xercler]);
+  const fetchCustomStats = () => {
+    if (!baslama || !bitme) return;
+    api.get('/reports/dashboard', { params: { startDate: baslama, endDate: bitme + 'T23:59:59' } })
+      .then(res => setCustomStats(res.data?.data || res.data))
+      .catch(() => showToast('Məlumatlar yüklənərkən xəta baş verdi', 'error'));
+  };
 
-  const secilenDovrStats = useMemo(() => {
-    if (!baslama || !bitme) return { gelir: 0, menfeet: 0 };
-
-    const satislar = data.satislar.filter(
-      (s) => s.tarix >= baslama && s.tarix <= bitme + 'T23:59:59',
-    );
-    const xercler = data.xercler.filter((x) => x.tarix >= baslama && x.tarix <= bitme);
-
-    const umumiGelir = satislar.reduce((sum, s) => sum + s.yekun_mebleg, 0);
-    const umumiMenfeet = satislar.reduce((sum, s) => sum + s.menfeet, 0);
-    const umumiXerc = xercler.reduce((sum, x) => sum + x.mebleg, 0);
-
-    return { gelir: umumiGelir, menfeet: umumiMenfeet - umumiXerc, xerc: umumiXerc };
-  }, [data.satislar, data.xercler, baslama, bitme]);
+  const gunlukGelirFoiz = (dailyStats && monthlyStats && monthlyStats.totalSales > 0)
+    ? ((dailyStats.totalSales / monthlyStats.totalSales) * 100).toFixed(1) : 0;
+  const gunlukMenfeetFoiz = (dailyStats && monthlyStats && monthlyStats.netProfit > 0)
+    ? ((dailyStats.netProfit / monthlyStats.netProfit) * 100).toFixed(1) : 0;
 
   const gunlukAxin = useMemo(() => {
     if (!baslama || !bitme) return {};
 
-    const satislar = data.satislar.filter(
-      (s) => s.tarix >= baslama && s.tarix <= bitme + 'T23:59:59',
+    const satislar = (data.satislar || []).filter(
+      (s) => (s.createdAt || s.tarix || '') >= baslama && (s.createdAt || s.tarix || '') <= bitme + 'T23:59:59',
     );
-    const xercler = data.xercler.filter((x) => x.tarix >= baslama && x.tarix <= bitme);
+    const xercler = (data.xercler || []).filter((x) => (x.createdAt || x.tarix || '') >= baslama && (x.createdAt || x.tarix || '') <= bitme + 'T23:59:59');
 
     const gunlukAxinMap = {};
 
     satislar.forEach((s) => {
-      const tarix = s.tarix.split('T')[0];
+      const tarix = (s.createdAt || s.tarix || '').split('T')[0];
+      if (!tarix) return;
       if (!gunlukAxinMap[tarix]) {
-        gunlukAxinMap[tarix] = { gelir: 0, menfeet: 0, xerc: 0 };
+        gunlukAxinMap[tarix] = { gelir: 0, menfeet: 0, xerc: 0, satisSay: 0 };
       }
-      gunlukAxinMap[tarix].gelir += s.yekun_mebleg;
-      gunlukAxinMap[tarix].menfeet += s.menfeet;
+      gunlukAxinMap[tarix].gelir += (s.finalAmount || s.yekun_mebleg || 0);
+      gunlukAxinMap[tarix].menfeet += (s.discount || s.menfeet || 0);
+      gunlukAxinMap[tarix].satisSay += 1;
     });
 
     xercler.forEach((x) => {
-      if (!gunlukAxinMap[x.tarix]) {
-        gunlukAxinMap[x.tarix] = { gelir: 0, menfeet: 0, xerc: 0 };
+      const xTarix = (x.createdAt || x.tarix || '').split('T')[0];
+      if (!xTarix) return;
+      if (!gunlukAxinMap[xTarix]) {
+        gunlukAxinMap[xTarix] = { gelir: 0, menfeet: 0, xerc: 0, satisSay: 0 };
       }
-      gunlukAxinMap[x.tarix].xerc += x.mebleg;
+      gunlukAxinMap[xTarix].xerc += (x.amount || x.mebleg || 0);
     });
 
     return gunlukAxinMap;
@@ -97,10 +86,10 @@ function MaliyyeUmumi() {
     const ws_data = [
       [
         'Tarix',
-        'G\u0259lir',
-        'X\u0259rc',
-        'M\u0259nf\u0259\u0259t',
-        '\u0258m\u0259liyyat Say\u0131',
+        'Gəlir',
+        'Xərc',
+        'Mənfəət',
+        'Əməliyyat Sayı',
         'Qeyd',
       ],
     ];
@@ -115,7 +104,7 @@ function MaliyyeUmumi() {
         parseFloat(axin.xerc.toFixed(2)),
         parseFloat(netMenfeet.toFixed(2)),
         axin.satisSay || 0,
-        netMenfeet >= 0 ? 'M\u0259nf\u0259\u0259t' : 'Z\u0259r\u0259r',
+        netMenfeet >= 0 ? 'Mənfəət' : 'Zərər',
       ]);
     });
 
@@ -126,32 +115,32 @@ function MaliyyeUmumi() {
 
     ws_data.push([]);
     ws_data.push([
-      '\u00DCMUM\u0130',
+      'ÜMUMİ',
       parseFloat(umumiGelir.toFixed(2)),
       parseFloat(umumiXerc.toFixed(2)),
       parseFloat(umumiMenfeet.toFixed(2)),
       '',
-      umumiMenfeet >= 0 ? 'M\u0259nf\u0259\u0259t' : 'Z\u0259r\u0259r',
+      umumiMenfeet >= 0 ? 'Mənfəət' : 'Zərər',
     ]);
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     ws['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, ws, 'Maliyy\u0259 Hesabat\u0131');
+    XLSX.utils.book_append_sheet(wb, ws, 'Maliyyə Hesabatı');
     XLSX.writeFile(wb, `maliyye_hesabati_${baslama}_${bitme}.xlsx`);
   };
 
   return (
     <div>
-      {/* Tarix Aral\u0131\u011F\u0131 Filter */}
+      {/* Tarix Aralığı Filter */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <h3 className="text-xl font-semibold mb-4">
-          <i className="fas fa-calendar-alt"></i> Tarix Aral\u0131\u011F\u0131
+          <i className="fas fa-calendar-alt"></i> Tarix Aralığı
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ba\u015Flama Tarixi
+              Başlama Tarixi
             </label>
             <input
               type="date"
@@ -162,7 +151,7 @@ function MaliyyeUmumi() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bitm\u0259 Tarixi
+              Bitmə Tarixi
             </label>
             <input
               type="date"
@@ -172,7 +161,9 @@ function MaliyyeUmumi() {
             />
           </div>
           <div className="flex items-end">
-            <button className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+            <button
+              onClick={fetchCustomStats}
+              className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
               <i className="fas fa-search"></i> Axtar...
             </button>
           </div>
@@ -181,7 +172,7 @@ function MaliyyeUmumi() {
               onClick={handleExport}
               className="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
             >
-              <i className="fas fa-file-excel"></i> Excel Y\u00FCkl\u0259
+              <i className="fas fa-file-excel"></i> Excel Yüklə
             </button>
           </div>
         </div>
@@ -190,64 +181,64 @@ function MaliyyeUmumi() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-green-100 text-sm mb-1">G\u00FCnl\u00FCk G\u0259lir</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats.gunlukGelir)}</h3>
+          <p className="text-green-100 text-sm mb-1">Günlük Gəlir</p>
+          <h3 className="text-2xl font-bold">{formatMebleg(dailyStats?.totalSales || 0)}</h3>
           <p className="text-green-100 text-xs mt-2">
-            Ayl\u0131q h\u0259cmd\u0259: {stats.gunlukGelirFoiz}%
+            Aylıq həcmdə: {gunlukGelirFoiz}%
           </p>
         </div>
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-blue-100 text-sm mb-1">G\u00FCnl\u00FCk M\u0259nf\u0259\u0259t</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats.gunlukMenfeet)}</h3>
+          <p className="text-blue-100 text-sm mb-1">Günlük Mənfəət</p>
+          <h3 className="text-2xl font-bold">{formatMebleg(dailyStats?.netProfit || 0)}</h3>
           <p className="text-blue-100 text-xs mt-2">
-            Ayl\u0131q h\u0259cmd\u0259: {stats.gunlukMenfeetFoiz}%
+            Aylıq həcmdə: {gunlukMenfeetFoiz}%
           </p>
         </div>
         <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-emerald-100 text-sm mb-1">Ayl\u0131q G\u0259lir</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats.ayliqGelir)}</h3>
+          <p className="text-emerald-100 text-sm mb-1">Aylıq Gəlir</p>
+          <h3 className="text-2xl font-bold">{formatMebleg(monthlyStats?.totalSales || 0)}</h3>
           <p className="text-emerald-100 text-xs mt-2">100%</p>
         </div>
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-purple-100 text-sm mb-1">Ayl\u0131q M\u0259nf\u0259\u0259t</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats.ayliqMenfeet)}</h3>
+          <p className="text-purple-100 text-sm mb-1">Aylıq Mənfəət</p>
+          <h3 className="text-2xl font-bold">{formatMebleg(monthlyStats?.netProfit || 0)}</h3>
           <p className="text-purple-100 text-xs mt-2">100%</p>
         </div>
         <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-red-100 text-sm mb-1">G\u00FCnl\u00FCk X\u0259rc</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats.gunlukXerc)}</h3>
+          <p className="text-red-100 text-sm mb-1">Günlük Xərc</p>
+          <h3 className="text-2xl font-bold">{formatMebleg(dailyStats?.totalExpenses || 0)}</h3>
         </div>
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-orange-100 text-sm mb-1">Ayl\u0131q X\u0259rc</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats.ayliqXerc)}</h3>
+          <p className="text-orange-100 text-sm mb-1">Aylıq Xərc</p>
+          <h3 className="text-2xl font-bold">{formatMebleg(monthlyStats?.totalExpenses || 0)}</h3>
         </div>
         <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl shadow-lg p-6">
           <p className="text-indigo-100 text-sm mb-1">
-            Se\u00E7il\u0259n D\u00F6vrd\u0259 G\u0259lir
+            Seçilən Dövrdə Gəlir
           </p>
-          <h3 className="text-2xl font-bold">{formatMebleg(secilenDovrStats.gelir)}</h3>
+          <h3 className="text-2xl font-bold">{formatMebleg(customStats?.totalSales || 0)}</h3>
         </div>
         <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl shadow-lg p-6">
           <p className="text-pink-100 text-sm mb-1">
-            Se\u00E7il\u0259n D\u00F6vrd\u0259 M\u0259nf\u0259\u0259t
+            Seçilən Dövrdə Mənfəət
           </p>
-          <h3 className="text-2xl font-bold">{formatMebleg(secilenDovrStats.menfeet)}</h3>
+          <h3 className="text-2xl font-bold">{formatMebleg(customStats?.netProfit || 0)}</h3>
         </div>
       </div>
 
-      {/* G\u00FCnl\u00FCk Pul Ax\u0131n\u0131 */}
+      {/* Günlük Pul Axını */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h3 className="text-xl font-semibold mb-4">
-          <i className="fas fa-chart-line"></i> G\u00FCnl\u00FCk Pul Ax\u0131n\u0131
+          <i className="fas fa-chart-line"></i> Günlük Pul Axını
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left">Tarix</th>
-                <th className="px-4 py-3 text-right">G\u0259lir</th>
-                <th className="px-4 py-3 text-right">X\u0259rc</th>
-                <th className="px-4 py-3 text-right">M\u0259nf\u0259\u0259t</th>
+                <th className="px-4 py-3 text-right">Gəlir</th>
+                <th className="px-4 py-3 text-right">Xərc</th>
+                <th className="px-4 py-3 text-right">Mənfəət</th>
                 <th className="px-4 py-3 text-left">Status</th>
               </tr>
             </thead>
@@ -255,7 +246,7 @@ function MaliyyeUmumi() {
               {Object.keys(gunlukAxin).length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                    Bu tarix aral\u0131\u011F\u0131nda m\u0259lumat yoxdur
+                    Bu tarix aralığında məlumat yoxdur
                   </td>
                 </tr>
               ) : (
@@ -267,7 +258,7 @@ function MaliyyeUmumi() {
                     const statusClass = netMenfeet >= 0 ? 'text-green-600' : 'text-red-600';
                     const statusIcon = netMenfeet >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
                     const statusText =
-                      netMenfeet >= 0 ? 'M\u0259nf\u0259\u0259t' : 'Z\u0259r\u0259r';
+                      netMenfeet >= 0 ? 'Mənfəət' : 'Zərər';
 
                     return (
                       <tr key={tarix} className="border-b hover:bg-gray-50">
@@ -280,7 +271,7 @@ function MaliyyeUmumi() {
                         <td className="px-4 py-3 text-right text-red-600">
                           {formatMebleg(axin.xerc)}
                         </td>
-                        <td className="px-4 py-3 text-right font-bold {statusClass}">
+                        <td className={`px-4 py-3 text-right font-bold ${statusClass}`}>
                           {formatMebleg(netMenfeet)}
                         </td>
                         <td className="px-4 py-3">

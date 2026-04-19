@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import UmumiAnbar from './pages/anbar/UmumiAnbar';
 import Satis from './pages/Satis';
 import SatisTarixce from './pages/SatisTarixce';
+import MusteriIadeleri from './pages/MusteriIadeleri';
 import Maliyye from './pages/maliyye/Maliyye';
 import Parametrler from './pages/Parametrler';
 import Login from './pages/Login';
@@ -59,6 +60,7 @@ function AppContent() {
             <Route path="/anbar" element={<UmumiAnbar />} />
             <Route path="/satis" element={<Satis />} />
             <Route path="/satis-tarixce" element={<SatisTarixce />} />
+            <Route path="/musteri-iadeleri" element={<MusteriIadeleri />} />
             <Route path="/maliyye" element={isCashier ? <Navigate to="/satis" replace /> : <Maliyye />} />
             <Route path="/parametrler" element={isCashier ? <Navigate to="/satis" replace /> : <Parametrler />} />
             <Route path="/users" element={role === 'ADMIN' ? <Istifadeciler /> : <Navigate to="/" replace />} />

@@ -137,7 +137,7 @@ function Satis() {
     };
   }, [sebet, umumiEndirim]);
 
-  const satisiTamamla = () => {
+  const satisiTamamla = async () => {
     if (sebet.length === 0) {
       showToast('Səbət boşdur!', 'warning');
       return;
@@ -225,11 +225,15 @@ function Satis() {
       mehsullar: mehsullar,
     };
 
-    addSatis(satis);
-    showToast('Satış uğurla tamamlandı!', 'success');
-    openModal('qebz', satis);
-    setMusteriAd('');
-    setMusteriTel('');
+    try {
+      await addSatis(satis);
+      showToast('Satış uğurla tamamlandı!', 'success');
+      openModal('qebz', satis);
+      setMusteriAd('');
+      setMusteriTel('');
+    } catch (err) {
+      showToast('Satış xətası baş verdi', 'error');
+    }
   };
 
   return (
@@ -241,29 +245,6 @@ function Satis() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2">
-          {/* Müştəri Məlumatları */}
-          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Müştəri Məlumatları
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                value={musteriAd}
-                onChange={(e) => setMusteriAd(e.target.value)}
-                className="px-4 py-2 border rounded-lg"
-                placeholder="Müştəri adı"
-              />
-              <input
-                type="tel"
-                value={musteriTel}
-                onChange={(e) => setMusteriTel(e.target.value)}
-                className="px-4 py-2 border rounded-lg"
-                placeholder="Telefon"
-              />
-            </div>
-          </div>
-
           {/* Məhsul Axtar */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-semibold mb-4">Məhsul Seç</h3>
@@ -494,6 +475,27 @@ function Satis() {
                   <div className="flex justify-between text-lg font-bold text-green-600 border-t pt-2">
                     <span>Qalıq (Para üstü):</span>
                     <span>{formatMebleg((parseFloat(odenisMebleg) || 0) - hesaplamalar.yekun)}</span>
+                  </div>
+                </div>
+
+                {/* Müştəri Məlumatları (Ödəmə Hissəsi) */}
+                <div className="border-t pt-4 my-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Müştəri (Opsiyonel)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={musteriAd}
+                      onChange={(e) => setMusteriAd(e.target.value)}
+                      className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      placeholder="Müştəri Adı"
+                    />
+                    <input
+                      type="tel"
+                      value={musteriTel}
+                      onChange={(e) => setMusteriTel(e.target.value)}
+                      className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      placeholder="Telefon Nömrəsi"
+                    />
                   </div>
                 </div>
 
