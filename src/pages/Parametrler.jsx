@@ -180,12 +180,7 @@ function Parametrler() {
             className="flex-1 px-4 py-2 border rounded-lg"
             placeholder="Rəngin adı (məs: Qırmızı)"
           />
-          <input
-            type="color"
-            value={yeniRngKod}
-            onChange={(e) => setYeniRngKod(e.target.value)}
-            className="w-16 h-10 border rounded-lg cursor-pointer"
-          />
+        
           <button
             onClick={handleRngElave}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
@@ -201,7 +196,7 @@ function Parametrler() {
               style={{ background: `linear-gradient(135deg, ${r.kod}22 0%, ${r.kod}44 100%)` }}
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded border" style={{ backgroundColor: r.kod }}></div>
+                
                 <span className="font-medium">{r.ad}</span>
               </div>
               <button
