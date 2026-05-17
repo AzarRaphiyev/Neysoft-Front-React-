@@ -41,7 +41,7 @@ function Dashboard() {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">İdarə Paneli</h2>
+      <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 md:mb-6">İdarə Paneli</h2>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -78,8 +78,8 @@ function Dashboard() {
             <i className="fas fa-check-circle"></i> Stok vəziyyəti normaldır
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm min-w-max whitespace-nowrap">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-3 py-2 text-left">Barkod</th>
@@ -126,8 +126,8 @@ function Dashboard() {
         {sonSatislar.length === 0 ? (
           <p className="text-gray-500">Hələ satış edilməyib</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm min-w-max whitespace-nowrap">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-3 py-2 text-left">Qəbz №</th>

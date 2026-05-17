@@ -10,7 +10,8 @@ function SatisTarixce() {
   const { data, returnCustomerSale, fetchSatislar } = useData();
   const ui = useUI();
   const { openModal, showToast } = ui;
-  const [filterTarix, setFilterTarix] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [filterQebz, setFilterQebz] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [selectedSatis, setSelectedSatis] = useState(null);
@@ -66,10 +67,6 @@ function SatisTarixce() {
   const filtered = useMemo(() => {
     let filteredSatislar = [...(data.satislar || [])];
 
-    if (filterTarix) {
-      filteredSatislar = filteredSatislar.filter((s) => (s.createdAt || s.tarix || '').includes(filterTarix));
-    }
-
     if (filterQebz) {
       filteredSatislar = filteredSatislar.filter((s) => (s.receiptNo || s.qebz_nomre || '').toLowerCase().includes(filterQebz.toLowerCase()));
     }
@@ -83,7 +80,7 @@ function SatisTarixce() {
     }
 
     return filteredSatislar.sort((a, b) => new Date(b.createdAt || b.tarix || 0) - new Date(a.createdAt || a.tarix || 0));
-  }, [data.satislar, filterTarix, filterQebz, filterStatus]);
+  }, [data.satislar, filterQebz, filterStatus]);
 
   const handleExport = () => {
     const ws_data = [
@@ -186,30 +183,54 @@ function SatisTarixce() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
           <i className="fas fa-history"></i> Satış Tarixçəsi
         </h2>
         <button
           onClick={handleExport}
-          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+          className="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 text-center"
         >
-          <i className="fas fa-file-export"></i> Excel Export
+          <i className="fas fa-file-export mr-2"></i> Excel Export
         </button>
       </div>
 
-      {/* Filters */}
+      {/* API Filters */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm mb-2">Tarix</label>
+        <div className="flex flex-wrap items-end gap-4 mb-4">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm mb-2 text-gray-600 font-medium">Başlanğıc Tarix</label>
             <input
               type="date"
-              value={filterTarix}
-              onChange={(e) => setFilterTarix(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm mb-2 text-gray-600 font-medium">Bitiş Tarix</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <button
+            onClick={() => { if (fetchSatislar) fetchSatislar(startDate, endDate); }}
+            className="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center font-medium h-[42px]"
+          >
+            <i className="fas fa-search mr-2"></i>Axtar
+          </button>
+        </div>
+        {(startDate || endDate) && (
+          <p className="text-sm text-gray-600 mb-4">Göstərilən aralıq: {startDate} - {endDate}</p>
+        )}
+      </div>
+
+      {/* Local Filters */}
+      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm mb-2">Qəbz №</label>
             <input
@@ -237,12 +258,13 @@ function SatisTarixce() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-max whitespace-nowrap">
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left">Qəbz №</th>
                 <th className="px-4 py-3 text-left">Tarix</th>
+                <th className="px-4 py-3 text-left">Kassir</th>
                 <th className="px-4 py-3 text-left">Müştəri</th>
                 <th className="px-4 py-3 text-right">Məbləğ</th>
                 <th className="px-4 py-3 text-right">Endirim</th>
@@ -272,8 +294,11 @@ function SatisTarixce() {
                       <td className="px-4 py-3">
                         {s.createdAt || s.date || s.tarix ? new Date(s.createdAt || s.date || s.tarix).toLocaleString('az-AZ') : '-'}
                       </td>
+                      <td className="px-4 py-3 font-medium text-gray-700">
+                        {s.user?.username || s.kassir || 'Bilinmir'}
+                      </td>
                       <td className="px-4 py-3">
-                        {s.user ? `${s.user.firstName || ''} ${s.user.lastName || ''}`.trim() : (s.userId || s.musteri_ad || '-')}
+                        {s.customerName || s.musteri_ad || 'Standart Müştəri'}
                       </td>
                       <td className="px-4 py-3 text-right">{formatMebleg(s.totalAmount || s.umumi_mebleg || 0)}</td>
                       <td className="px-4 py-3 text-right text-red-600">
@@ -338,7 +363,7 @@ function SatisTarixce() {
       >
         {selectedSatis && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <strong>Qəbz №:</strong> {selectedSatis?.receiptNo || selectedSatis?.qebz_nomre || '-'}
               </div>
@@ -346,10 +371,13 @@ function SatisTarixce() {
                 <strong>Tarix:</strong> {selectedSatis?.date ? new Date(selectedSatis.date).toLocaleString('az-AZ') : (selectedSatis?.tarix ? new Date(selectedSatis.tarix).toLocaleString('az-AZ') : '-')}
               </div>
               <div>
-                <strong>Müştəri:</strong> {selectedSatis?.customer ? (selectedSatis.customer.firstName + ' ' + selectedSatis.customer.lastName) : 'Standart Müştəri'}
+                <strong>Kassir:</strong> {selectedSatis?.user?.username || selectedSatis?.kassir || 'Bilinmir'}
               </div>
               <div>
-                <strong>Telefon:</strong> {selectedSatis?.customer?.phone || selectedSatis?.musteri_tel || '-'}
+                <strong>Müştəri:</strong> {selectedSatis?.customerName || selectedSatis?.musteri_ad || 'Standart Müştəri'}
+              </div>
+              <div>
+                <strong>Telefon:</strong> {selectedSatis?.customerPhone || selectedSatis?.musteri_tel || '-'}
               </div>
               <div>
                 <strong>Ödəniş:</strong> {selectedSatis?.paymentMethod === 'CARD' ? 'Kart' : (selectedSatis?.paymentMethod === 'CASH' ? 'Nağd' : (selectedSatis?.odenis_nov || '-'))}
@@ -360,7 +388,7 @@ function SatisTarixce() {
             </div>
             <div className="border-t pt-4">
               <h4 className="font-semibold mb-3">Məhsullar:</h4>
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-max whitespace-nowrap">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="px-3 py-2 text-left">Məhsul</th>
@@ -375,7 +403,16 @@ function SatisTarixce() {
                     <tr key={idx} className="border-b">
                       <td className="px-3 py-2">{m?.product?.name || m?.mal_adi || '-'}</td>
                       <td className="px-3 py-2 text-right">{m?.quantity || m?.miqdar || 0}</td>
-                      <td className="px-3 py-2 text-right">{formatMebleg(m?.price || m?.satis_qiymeti || 0)}</td>
+                      <td className="px-3 py-2 text-right">
+                        {(m?.price < m?.product?.price) ? (
+                          <>
+                            <span className="line-through text-gray-400 text-xs mr-2">{m.product.price} AZN</span>
+                            <span className="text-red-600 font-bold">{m.price} AZN</span>
+                          </>
+                        ) : (
+                          `${m?.price || m?.satis_qiymeti || 0} AZN`
+                        )}
+                      </td>
                       <td className="px-3 py-2 text-right text-red-600">
                         {formatMebleg(m?.discount || m?.endirim_mebleg || 0)}
                       </td>
@@ -439,17 +476,17 @@ function SatisTarixce() {
               <div className="mb-4 text-xs space-y-1.5 font-semibold">
                 <div className="flex justify-between"><span>Tarix:</span> <span>{selectedSatis?.date ? new Date(selectedSatis.date).toLocaleString('az-AZ') : (selectedSatis?.tarix ? new Date(selectedSatis.tarix).toLocaleString('az-AZ') : '-')}</span></div>
                 <div className="flex justify-between"><span>Qəbz №:</span> <span>{selectedSatis?.receiptNo || selectedSatis?.qebz_nomre || '-'}</span></div>
-                <div className="flex justify-between"><span>Kassir:</span> <span className="uppercase">{selectedSatis?.user ? (selectedSatis.user.username || selectedSatis.user.firstName) : (selectedSatis?.kassir || '-')}</span></div>
+                <div className="flex justify-between"><span>Kassir:</span> <span className="uppercase">{selectedSatis?.user?.username || selectedSatis?.kassir || '-'}</span></div>
               </div>
 
-              {(selectedSatis?.customer || selectedSatis?.musteri_ad || selectedSatis?.musteri_tel) && (
+              {(selectedSatis?.customerName || selectedSatis?.customerPhone || selectedSatis?.musteri_ad || selectedSatis?.musteri_tel) && (
                 <div className="mb-4 text-xs border-y border-dashed border-gray-400 py-3 space-y-1.5 font-semibold bg-gray-50 px-2">
-                  <div className="flex justify-between"><span>Müştəri:</span> <span>{selectedSatis?.customer ? (selectedSatis.customer.firstName + ' ' + selectedSatis.customer.lastName) : 'Standart Müştəri'}</span></div>
-                  {(selectedSatis?.customer?.phone || selectedSatis?.musteri_tel) && <div className="flex justify-between"><span>Əlaqə:</span> <span>{selectedSatis?.customer?.phone || selectedSatis?.musteri_tel}</span></div>}
+                  {(selectedSatis?.customerName || selectedSatis?.musteri_ad) && <div className="flex justify-between"><span>Müştəri:</span> <span>{selectedSatis?.customerName || selectedSatis?.musteri_ad}</span></div>}
+                  {(selectedSatis?.customerPhone || selectedSatis?.musteri_tel) && <div className="flex justify-between"><span>Əlaqə:</span> <span>{selectedSatis?.customerPhone || selectedSatis?.musteri_tel}</span></div>}
                 </div>
               )}
 
-              <table className="w-full text-xs mb-4">
+              <table className="w-full text-xs mb-4 min-w-max whitespace-nowrap">
                 <thead className="border-b border-gray-800">
                   <tr>
                     <th className="text-left py-1.5 w-1/2 uppercase">Məhsul</th>
@@ -462,6 +499,12 @@ function SatisTarixce() {
                     <tr key={idx} className="border-b border-gray-200 last:border-0">
                       <td className="py-2 pr-1 break-words">
                         {m?.product?.name || m?.mal_adi || '-'}
+                        {m?.price < m?.product?.price && (
+                          <div className="text-[10px] mt-0.5">
+                            <span className="line-through text-gray-500 mr-1">{m.product.price} ₼</span>
+                            <span className="text-gray-900 font-bold">{m.price} ₼</span>
+                          </div>
+                        )}
                         {(m?.discount > 0 || m?.endirim > 0) && <div className="text-[10px] text-gray-500 font-normal">(-{m?.discount || m?.endirim}₼ endirim)</div>}
                       </td>
                       <td className="text-center py-2 align-top">{m?.quantity || m?.miqdar || 0}</td>
@@ -533,7 +576,7 @@ function SatisTarixce() {
             />
           </div>
           <div className="border border-gray-200 rounded-lg overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-max whitespace-nowrap">
               <thead className="bg-gray-100 border-b">
                 <tr>
                   <th className="px-3 py-2 text-left">Məhsul</th>

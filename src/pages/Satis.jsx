@@ -211,8 +211,8 @@ function Satis() {
       odenisMebleg: odenisFloat,
       qaliqMebleg: odenisFloat - yekunMebleg,
       tarix: new Date().toISOString(),
-      musteri_ad: musteriAd,
-      musteri_tel: musteriTel,
+      customerName: musteriAd,
+      customerPhone: musteriTel,
       odenis_nov: odenisNov,
       umumi_mebleg: umumiMebleg,
       mehsul_endirim: mehsulEndirimToplam,
@@ -238,7 +238,7 @@ function Satis() {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">
+      <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4 md:mb-6">
         <i className="fas fa-shopping-cart"></i> Yeni Satış
       </h2>
 
@@ -481,19 +481,19 @@ function Satis() {
                 {/* Müştəri Məlumatları (Ödəmə Hissəsi) */}
                 <div className="border-t pt-4 my-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Müştəri (Opsiyonel)</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <input
                       type="text"
                       value={musteriAd}
                       onChange={(e) => setMusteriAd(e.target.value)}
-                      className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      className="flex-1 w-full px-3 py-2 border rounded-lg text-sm"
                       placeholder="Müştəri Adı"
                     />
                     <input
                       type="tel"
                       value={musteriTel}
                       onChange={(e) => setMusteriTel(e.target.value)}
-                      className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      className="flex-1 w-full px-3 py-2 border rounded-lg text-sm"
                       placeholder="Telefon Nömrəsi"
                     />
                   </div>
@@ -506,7 +506,6 @@ function Satis() {
                 >
                   <option value="Nağd">Nağd</option>
                   <option value="Kart">Kart</option>
-                  <option value="Köçürmə">Köçürmə</option>
                 </select>
 
                 <button
@@ -528,16 +527,16 @@ function Satis() {
         onClose={() => ui.closeModal()}
         title="Qəbz"
         footer={
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
             <button
               onClick={() => window.print()}
-              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+              className="flex-1 w-full bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-blue-700"
             >
               <i className="fas fa-print"></i> Çap Et
             </button>
             <button
               onClick={() => ui.closeModal()}
-              className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700"
+              className="flex-1 w-full bg-gray-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-700"
             >
               Bağla
             </button>
@@ -564,15 +563,15 @@ function Satis() {
               </div>
 
               {/* Müştəri Məlumatları */}
-              {(ui.modalData.musteri_ad || ui.modalData.musteri_tel) && (
+              {(ui.modalData.customerName || ui.modalData.customerPhone || ui.modalData.musteri_ad || ui.modalData.musteri_tel) && (
                 <div className="mb-4 text-xs border-y border-dashed border-gray-400 py-3 space-y-1.5 font-semibold bg-gray-50 px-2">
-                  {ui.modalData.musteri_ad && <div className="flex justify-between"><span>Müştəri:</span> <span>{ui.modalData.musteri_ad}</span></div>}
-                  {ui.modalData.musteri_tel && <div className="flex justify-between"><span>Əlaqə:</span> <span>{ui.modalData.musteri_tel}</span></div>}
+                  {(ui.modalData.customerName || ui.modalData.musteri_ad) && <div className="flex justify-between"><span>Müştəri:</span> <span>{ui.modalData.customerName || ui.modalData.musteri_ad}</span></div>}
+                  {(ui.modalData.customerPhone || ui.modalData.musteri_tel) && <div className="flex justify-between"><span>Əlaqə:</span> <span>{ui.modalData.customerPhone || ui.modalData.musteri_tel}</span></div>}
                 </div>
               )}
 
               {/* Məhsullar Cədvəli */}
-              <table className="w-full text-xs mb-4">
+              <table className="w-full text-xs mb-4 min-w-max whitespace-nowrap">
                 <thead className="border-b border-gray-800">
                   <tr>
                     <th className="text-left py-1.5 w-1/2 uppercase">Məhsul</th>

@@ -41,7 +41,7 @@ function Mehsullar() {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
                     <i className="fas fa-boxes"></i> Məhsullar
                 </h2>
             </div>
@@ -73,8 +73,8 @@ function Mehsullar() {
 
             {/* Table */}
             <div className="bg-white rounded-xl shadow-md p-6">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full min-w-max whitespace-nowrap">
                         <thead className="bg-gray-100">
                             <tr>
                                 <th className="px-4 py-3 text-left">Barkod</th>

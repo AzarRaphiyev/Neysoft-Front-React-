@@ -82,7 +82,7 @@ function MalDaxil() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+      <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
         <i className="fas fa-plus"></i> Mal Daxil Et
       </h2>
 
@@ -111,7 +111,7 @@ function MalDaxil() {
       {/* Siyahıya Əlavə Et */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
         <h3 className="text-xl font-semibold mb-4">Siyahıya Əlavə Et</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 relative">
           <div className="col-span-1 md:col-span-2 relative">
             <input
               type="text"
@@ -169,7 +169,7 @@ function MalDaxil() {
             Əlavə Edilmiş Məhsullar
           </h3>
           <div className="overflow-x-auto mb-4">
-            <table className="w-full">
+            <table className="w-full min-w-max whitespace-nowrap">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-4 py-3 text-left">Barkod</th>

@@ -91,9 +91,9 @@ export function DataProvider({ children }) {
     }
   }, []);
 
-  const fetchSatislar = useCallback(async () => {
+  const fetchSatislar = useCallback(async (startDate = '', endDate = '') => {
     try {
-      const res = await api.get('/sales');
+      const res = await api.get('/sales', { params: { startDate, endDate } });
       const salesData = res.data?.data || res.data || [];
       setData((prev) => ({ ...prev, satislar: salesData }));
     } catch (err) {
@@ -106,8 +106,8 @@ export function DataProvider({ children }) {
       const payload = {
         receiptNo: String(satisData.qebz_nomre || ''),
         paymentMethod: satisData.odenis_nov === 'kart' || satisData.odenis_nov === 'Kart' ? 'CARD' : 'CASH',
-        customerName: satisData.musteri_ad || satisData.musteriAd || undefined,
-        customerPhone: satisData.musteri_tel || satisData.musteriTelefon || undefined,
+        customerName: satisData.customerName || satisData.musteri_ad || satisData.musteriAd || undefined,
+        customerPhone: satisData.customerPhone || satisData.musteri_tel || satisData.musteriTelefon || undefined,
         totalAmount: Number(satisData.umumi_mebleg || 0),
         discount: Number(satisData.umumi_endirim || 0),
         finalAmount: Number(satisData.yekun_mebleg || 0),
@@ -166,21 +166,44 @@ export function DataProvider({ children }) {
     });
   }, []);
 
-  const addXerc = useCallback((xerc) => {
-    setData((prev) => {
-      const updated = { ...prev, xercler: [...prev.xercler, xerc] };
-      saveData(updated);
-      return updated;
-    });
+const fetchXercler = useCallback(async (startDate = '', endDate = '') => {
+    try {
+      const res = await api.get('/expenses', { params: { startDate, endDate } });
+      const expensesData = res.data?.data || res.data || [];
+      setData((prev) => ({ ...prev, xercler: expensesData }));
+    } catch (err) {
+      console.error('fetchXercler Hatası:', err);
+    }
   }, []);
 
-  const deleteXerc = useCallback((xercId) => {
-    setData((prev) => {
-      const updated = { ...prev, xercler: prev.xercler.filter((x) => x.id !== xercId) };
-      saveData(updated);
-      return updated;
+  const addXerc = useCallback(async (xerc) => {
+    // 1. Düzgün user tapılır
+    const userStr = localStorage.getItem('user') || localStorage.getItem('authUser');
+    const currentUser = userStr ? JSON.parse(userStr) : {};
+
+    // 2. Payload DÜZƏLDİLDİ: 'name' əvəzinə MÜTLƏQ 'title' gedir!
+    const response = await api.post('/expenses', {
+      title: xerc.title || xerc.name || xerc.ad || '', 
+      amount: Number(xerc.amount) || Number(xerc.mebleg) || 0,
+      userId: currentUser?.id,
+      categoryId: xerc.categoryId || undefined, // null əvəzinə undefined daha təhlükəsizdir
+      date: xerc.date || xerc.tarix ? new Date(xerc.date || xerc.tarix).toISOString() : new Date().toISOString()
     });
-  }, []);
+    
+    await fetchXercler(); // Uğurlu olsa siyahını yenilə
+    return response.data;
+  }, [fetchXercler]);
+
+  // 3. Silmə əməliyyatı DÜZƏLDİLDİ: Artıq localStorage-dan yox, birbaşa DB-dən silir
+  const deleteXerc = useCallback(async (xercId) => {
+    try {
+      await api.delete(`/expenses/${xercId}`); // Backend-ə silmə istəyi atılır
+      await fetchXercler(); // Siyahı yenidən DB-dən çəkilir
+    } catch (err) {
+      console.error("Xərc silinərkən xəta:", err);
+      throw err;
+    }
+  }, [fetchXercler]);
 
 
   const fetchQaimeler = useCallback(async (startDate = '', endDate = '', receiptCode = '') => {
@@ -352,6 +375,25 @@ export function DataProvider({ children }) {
     setUmumiEndirim({ tipi: null, deyer: 0 });
   }, []);
 
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        await Promise.all([
+          fetchAnbar(),
+          fetchSatislar(),
+          fetchXercler(),
+          fetchQaimeler()
+        ]);
+      } catch (error) {
+        console.error("Veriler yüklenirken xəta:", error);
+      }
+    };
+    
+    if (localStorage.getItem('user') || localStorage.getItem('token') || localStorage.getItem('authUser')) {
+      loadAllData();
+    }
+  }, [fetchAnbar, fetchSatislar, fetchXercler, fetchQaimeler]);
+
   return (
     <DataContext.Provider
       value={{
@@ -386,6 +428,7 @@ export function DataProvider({ children }) {
         fetchAnbar,
         fetchQaimeler,
         fetchSatislar,
+        fetchXercler,
         updateSatisQiymeti,
         createProduct,
         returnCustomerSale,

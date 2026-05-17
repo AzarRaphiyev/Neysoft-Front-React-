@@ -67,11 +67,11 @@ function YeniMehsul() {
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-6">
                 <i className="fas fa-box-open"></i> Yeni Məhsul Yarat
             </h2>
             <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div className="md:col-span-2">
                         <label className="block text-sm mb-1">Barkod</label>
                         <input type="text" value={barkod} onChange={(e) => setBarkod(e.target.value)} className="w-full px-4 py-2 border rounded-lg" placeholder="Barkod (Boş qoyula bilər)" />

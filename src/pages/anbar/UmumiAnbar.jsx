@@ -18,19 +18,22 @@ function UmumiAnbar() {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">
+      <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-6">
         <i className="fas fa-warehouse"></i> Ümumi Anbar
       </h2>
 
-      {/* Sub Navigation */}
+   {/* Sub Navigation */}
       <div className="bg-white rounded-xl shadow-md p-4 mb-6">
-        <div className="flex gap-2">
+        {/* BURA DƏYİŞDİ: overflow-x-auto əlavə edildi */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`sub-tab-button px-4 py-2 rounded-lg transition text-sm ${activeTab === tab.id ? 'sub-tab-active' : ''
-                }`}
+              /* BURA DƏYİŞDİ: whitespace-nowrap və shrink-0 əlavə edildi */
+              className={`sub-tab-button whitespace-nowrap shrink-0 px-4 py-2 rounded-lg transition text-sm ${
+                activeTab === tab.id ? 'sub-tab-active' : ''
+              }`}
             >
               <i className={tab.icon}></i> {tab.label}
             </button>

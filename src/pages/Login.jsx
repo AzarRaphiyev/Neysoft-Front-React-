@@ -30,7 +30,7 @@ export default function Login() {
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <div className="p-8 bg-white rounded shadow-md w-full max-w-sm">
-                <h2 className="text-2xl font-bold mb-6 text-center">Giriş</h2>
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 text-center">Giriş</h2>
                 <form onSubmit={handleLogin}>
                     <div className="mb-4">
                         <label className="block mb-2 text-sm font-medium">İstifadəçi adı</label>

@@ -8,6 +8,9 @@ function MusteriIadeleri() {
     const [iadeler, setIadeler] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedIade, setSelectedIade] = useState(null);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [receiptNo, setReceiptNo] = useState('');
     const { openModal, closeModal, activeModal, showToast } = useUI();
 
     useEffect(() => {
@@ -17,7 +20,7 @@ function MusteriIadeleri() {
     const fetchIadeler = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/returns/customer');
+            const res = await api.get('/returns/customer', { params: { startDate, endDate, receiptNo } });
             setIadeler(res.data?.data || res.data || []);
         } catch (err) {
             showToast('İadələr yüklənərkən xəta baş verdi', 'error');
@@ -29,7 +32,7 @@ function MusteriIadeleri() {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-800">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
                     <i className="fas fa-undo"></i> Müştəri İadələri
                 </h2>
                 <button
@@ -40,14 +43,55 @@ function MusteriIadeleri() {
                 </button>
             </div>
 
+            {/* Filters */}
+            <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+                <div className="flex flex-wrap items-end gap-4">
+                    <div className="flex-1 min-w-[150px]">
+                        <label className="block text-sm mb-2 text-gray-600 font-medium">Başlanğıc Tarix</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-[150px]">
+                        <label className="block text-sm mb-2 text-gray-600 font-medium">Bitiş Tarix</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm mb-2 text-gray-600 font-medium">Qəbz Nömrəsi</label>
+                        <input
+                            type="text"
+                            value={receiptNo}
+                            onChange={(e) => setReceiptNo(e.target.value)}
+                            placeholder="Qəbz nömrəsi..."
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <button
+                        onClick={fetchIadeler}
+                        className="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center font-medium h-[42px]"
+                    >
+                        <i className="fas fa-search mr-2"></i>Axtar
+                    </button>
+                </div>
+            </div>
+
             <div className="bg-white rounded-xl shadow-md p-6">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full text-sm min-w-max whitespace-nowrap">
                         <thead className="bg-gray-100">
                             <tr>
                                 <th className="px-4 py-3 text-left">İadə Tarixi</th>
                                 <th className="px-4 py-3 text-left">Qəbz №</th>
                                 <th className="px-4 py-3 text-left">Kassir</th>
+                                <th className="px-4 py-3 text-left">Müştəri</th>
                                 <th className="px-4 py-3 text-left">İadə Səbəbi</th>
                                 <th className="px-4 py-3 text-right">Qaytarılan Məbləğ</th>
                                 <th className="px-4 py-3 text-center">Əməliyyat</th>
@@ -56,13 +100,13 @@ function MusteriIadeleri() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
                                         Yüklənir...
                                     </td>
                                 </tr>
                             ) : iadeler.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
                                         İadə tapılmadı.
                                     </td>
                                 </tr>
@@ -77,6 +121,9 @@ function MusteriIadeleri() {
                                         </td>
                                         <td className="px-4 py-3">
                                             {qaytarma.user ? `${qaytarma.user.username || qaytarma.user.firstName || 'Kassir'}` : '-'}
+                                        </td>
+                                        <td className="px-4 py-3 font-semibold text-gray-700">
+                                            {qaytarma.sale?.customerName || 'Standart Müştəri'}
                                         </td>
                                         <td className="px-4 py-3">
                                             {qaytarma.reason || 'Səbəb yoxdur'}
@@ -121,6 +168,11 @@ function MusteriIadeleri() {
                                 <span className="font-semibold block text-gray-500 text-xs">Kassir</span>
                                 <span className="font-bold uppercase">{selectedIade.user?.username || selectedIade.user?.firstName || '-'}</span>
                             </div>
+                            <div>
+                                <span className="font-semibold block text-gray-500 text-xs">Müştəri</span>
+                                <span className="font-bold block">{selectedIade?.sale?.customerName || 'Standart Müştəri'}</span>
+                                <span className="text-xs text-gray-500">{selectedIade?.sale?.customerPhone || '-'}</span>
+                            </div>
                             <div className="text-right">
                                 <span className="font-semibold block text-gray-500 text-xs">Yekun İadə</span>
                                 <span className="font-bold text-red-600 text-lg">{formatMebleg(selectedIade.totalAmount || 0)}</span>
@@ -128,7 +180,7 @@ function MusteriIadeleri() {
                         </div>
 
                         <div className="border border-gray-200 rounded-lg overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <table className="w-full text-sm min-w-max whitespace-nowrap">
                                 <thead className="bg-gray-100 border-b">
                                     <tr>
                                         <th className="px-3 py-2 text-left">Məhsul</th>

@@ -44,7 +44,7 @@ function DaxilolmaTarixce() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
           <i className="fas fa-clipboard-list"></i> Mal Daxil Olma Tarixçəsi
         </h2>
         <button
@@ -57,7 +57,7 @@ function DaxilolmaTarixce() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm mb-2">Başlama Tarixi</label>
             <input
@@ -91,8 +91,8 @@ function DaxilolmaTarixce() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-max whitespace-nowrap">
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left">Qaimə Kodu</th>
@@ -159,13 +159,13 @@ function DaxilolmaTarixce() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto flex-1">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div><span className="block text-gray-500 text-xs uppercase mb-1">Qaimə Kodu</span><span className="font-semibold">{selectedQaime.receiptCode || selectedQaime.qaime_kod || '-'}</span></div>
                 <div><span className="block text-gray-500 text-xs uppercase mb-1">Tarix</span><span className="font-semibold">{new Date(selectedQaime.date || selectedQaime.tarix || new Date()).toLocaleDateString('az-AZ')}</span></div>
                 <div><span className="block text-gray-500 text-xs uppercase mb-1">Təchizatçı</span><span className="font-semibold">{selectedQaime.supplier?.name || data.techizatcilar.find((t) => t.id === parseInt(selectedQaime.techizatci_id))?.ad || '-'}</span></div>
                 <div><span className="block text-gray-500 text-xs uppercase mb-1">Status</span><span className="font-semibold">{selectedQaime.status || '-'}</span></div>
               </div>
-              <table className="w-full text-left bg-white">
+              <table className="w-full text-left bg-white min-w-max whitespace-nowrap">
                 <thead className="bg-gray-100 border-b">
                   <tr>
                     <th className="py-2 px-3 text-sm font-semibold">Ad</th>

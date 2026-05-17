@@ -32,7 +32,7 @@ function Sidebar() {
   if (currentRole === 'ADMIN') {
     items = [...allMenuItems, { path: '/users', icon: 'fas fa-users', label: 'İstifadəçilər' }];
   } else if (currentRole === 'MANAGER') {
-    items = [...allMenuItems];
+    items = [...allMenuItems, { path: '/users', icon: 'fas fa-users', label: 'İstifadəçilər' }];
   } else if (currentRole === 'CASHIER') {
     items = [
       { path: '/satis', icon: 'fas fa-shopping-cart', label: 'Satış' },
@@ -83,6 +83,9 @@ function Sidebar() {
           </h1>
           <div className="space-y-2">
             {items.map((item) => {
+              if (currentRole === 'CASHIER' && (item.path === '/users' || item.label === 'İstifadəçilər')) return null;
+              if (currentRole === 'CASHIER' && (item.path === '/musteri-iadeleri' || item.label === 'Müştəri İadələri')) return null;
+
               const isActive = location.pathname === item.path;
               return (
                 <button

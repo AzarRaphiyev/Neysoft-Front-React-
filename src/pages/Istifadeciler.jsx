@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Navigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useUI } from '../contexts/UIContext';
 import Modal from '../components/common/Modal';
@@ -8,6 +9,14 @@ function Istifadeciler() {
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const { showToast } = useUI();
+
+    let currentUser = { role: 'GUEST' };
+    try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            currentUser = JSON.parse(userStr) || currentUser;
+        }
+    } catch (e) {}
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -35,14 +44,38 @@ function Istifadeciler() {
 
     const handleAddSubmit = async (e) => {
         e.preventDefault();
+        
+        // Şifrənin boş olub-olmadığını yoxla (Frontend Validation)
+        if (!formData.password || formData.password.trim() === '') {
+            showToast('Şifrə daxil edilməlidir!', 'error');
+            return;
+        }
+
         try {
-            await api.post('/auth/register', formData);
-            showToast('İstifadəçi uğurla yaradıldı', 'success');
+            // Backend-in gözlədiyi payload
+            const payload = {
+                username: formData.username.trim(),
+                email: formData.email.trim(),
+                password: formData.password, 
+                role: formData.role
+            };
+
+            await api.post('/auth/register', payload);
+            showToast('İstifadəçi uğurla yaradıldı!', 'success');
             setIsAddModalOpen(false);
             setFormData({ username: '', email: '', password: '', role: '' });
             fetchUsers();
         } catch (error) {
-            showToast('İstifadəçi yaradılarkən xəta baş verdi', 'error');
+            // BACKEND-DƏN GƏLƏN DƏQİQ XƏTANI TUTURUQ
+            console.error('Qeydiyyat xətası:', error);
+            const errorMsg = error.response?.data?.message || 'İstifadəçi yaradılarkən xəta baş verdi';
+            
+            // Əgər NestJS xətaları (validation errors) array kimi qaytarıbsa, ilkini göstəririk
+            if (Array.isArray(errorMsg)) {
+                showToast(errorMsg[0], 'error');
+            } else {
+                showToast(errorMsg, 'error');
+            }
         }
     };
 
@@ -59,13 +92,17 @@ function Istifadeciler() {
         }
     };
 
+    if (currentUser.role === 'CASHIER') {
+        return <Navigate to="/" />;
+    }
+
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-800">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800">
                     <i className="fas fa-users"></i> İstifadəçilər
                 </h2>
-                <div className="flex gap-4 items-center">
+                <div className="flex flex-col sm:flex-row gap-4 items-center w-full sm:w-auto">
                     <input
                         type="text"
                         placeholder="Username ilə axtar..."
@@ -75,7 +112,7 @@ function Istifadeciler() {
                     />
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow flex items-center gap-2 transition whitespace-nowrap"
+                        className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow flex items-center justify-center gap-2 transition whitespace-nowrap"
                     >
                         <i className="fas fa-user-plus"></i> Yeni İstifadəçi
                     </button>
@@ -89,8 +126,8 @@ function Istifadeciler() {
                 {loading ? (
                     <p className="p-6 text-center text-gray-500">Yüklənir...</p>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left min-w-max whitespace-nowrap">
                             <thead className="bg-gray-100 border-b">
                                 <tr>
                                     <th className="px-6 py-4 font-semibold text-gray-700">#</th>
@@ -98,7 +135,6 @@ function Istifadeciler() {
                                     <th className="px-6 py-4 font-semibold text-gray-700">Email</th>
                                     <th className="px-6 py-4 font-semibold text-gray-700">Rol</th>
                                     <th className="px-6 py-4 font-semibold text-gray-700">Qeydiyyat Tarixi</th>
-                                    <th className="px-6 py-4 font-semibold text-gray-700 text-center">Əməliyyatlar</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -118,15 +154,6 @@ function Istifadeciler() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-gray-500">{u.createdAt ? new Date(u.createdAt).toLocaleDateString('az-AZ') : '-'}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <button
-                                                    onClick={() => handleForgotPassword(u)}
-                                                    className="text-orange-500 hover:text-orange-600 transition"
-                                                    title="Şifrəni Sıfırla"
-                                                >
-                                                    <i className="fas fa-key"></i>
-                                                </button>
-                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -177,28 +204,34 @@ function Istifadeciler() {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
                             <select
                                 required
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                                 value={formData.role}
                                 onChange={e => setFormData({ ...formData, role: e.target.value })}
                             >
                                 <option value="">-- Rol Seçin --</option>
-                                <option value="ADMIN">Admin</option>
-                                <option value="MANAGER">Menecer</option>
-                                <option value="CASHIER">Kassir</option>
+                                {currentUser.role === 'ADMIN' && (
+                                    <>
+                                        <option value="MANAGER">Menecer</option>
+                                        <option value="CASHIER">Kassir</option>
+                                    </>
+                                )}
+                                {currentUser.role === 'MANAGER' && (
+                                    <option value="CASHIER">Kassir</option>
+                                )}
                             </select>
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
                             <button
                                 type="button"
                                 onClick={() => setIsAddModalOpen(false)}
-                                className="flex-1 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition"
+                                className="flex-1 w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition"
                             >
                                 Ləğv Et
                             </button>
                             <button
                                 type="submit"
-                                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                                className="flex-1 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                             >
                                 Təsdiqlə
                             </button>

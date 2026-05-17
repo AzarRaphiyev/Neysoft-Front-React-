@@ -67,7 +67,7 @@ function AnbarSiyahisi() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
           <i className="fas fa-boxes"></i> Anbar Siyahısı
         </h2>
         <button
@@ -80,7 +80,7 @@ function AnbarSiyahisi() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <input
             type="text"
             value={axtar}
@@ -113,8 +113,8 @@ function AnbarSiyahisi() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-max whitespace-nowrap">
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-3 text-left">Barkod</th>

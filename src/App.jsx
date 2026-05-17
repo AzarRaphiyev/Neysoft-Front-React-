@@ -63,7 +63,7 @@ function AppContent() {
             <Route path="/musteri-iadeleri" element={<MusteriIadeleri />} />
             <Route path="/maliyye" element={isCashier ? <Navigate to="/satis" replace /> : <Maliyye />} />
             <Route path="/parametrler" element={isCashier ? <Navigate to="/satis" replace /> : <Parametrler />} />
-            <Route path="/users" element={role === 'ADMIN' ? <Istifadeciler /> : <Navigate to="/" replace />} />
+            <Route path="/users" element={['ADMIN', 'MANAGER'].includes(role) ? <Istifadeciler /> : <Navigate to="/" replace />} />
           </Route>
         </Route>
       </Routes>
