@@ -15,9 +15,18 @@ function SatisTarixce() {
   const [filterQebz, setFilterQebz] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [selectedSatis, setSelectedSatis] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
-    if (fetchSatislar) fetchSatislar();
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (fetchSatislar) await fetchSatislar();
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [fetchSatislar]);
 
   const [iadeSatis, setIadeSatis] = useState(null);
@@ -82,103 +91,32 @@ function SatisTarixce() {
     return filteredSatislar.sort((a, b) => new Date(b.createdAt || b.tarix || 0) - new Date(a.createdAt || a.tarix || 0));
   }, [data.satislar, filterQebz, filterStatus]);
 
-  const handleExport = () => {
-    const ws_data = [
-      [
-        'Qəbz Kodu',
-        'Barkod',
-        'Malın Adı',
-        'Satılan Miqdar',
-        'Alış Məbləği',
-        'Satış Məbləği',
-        'Məhsul Endirimi',
-        'Qəbz Endirimi',
-        'Qaytarılan Miqdar',
-        'Qaytarılan Məbləğ',
-        'Status',
-        'Cəm',
-        'Net Miqdar',
-      ],
-    ];
+  const handleExportExcel = () => {
+    const formattedData = filtered.map((s) => {
+      const isReturned = s.status === 'RETURNED' || s.status?.includes('Qaytar') || (s.qaytarmalar && s.qaytarmalar.length > 0);
+      const items = s.mehsullar || s.items || [];
+      const mehsulAdlari = items.map(m => m.product?.name || m.mal_adi || '').join(', ') || '-';
+      const miqdar = items.reduce((acc, m) => acc + (m.quantity || m.miqdar || 0), 0);
 
-    filtered.forEach((s) => {
-      const umumiSatisOrijinal = s.mehsullar.reduce(
-        (sum, m) => sum + m.satis_qiymeti * m.miqdar,
-        0,
-      );
-
-      s.mehsullar.forEach((m) => {
-        let qaytarilanMiqdar = 0;
-        let qaytarilanMebleg = 0;
-
-        if (s.qaytarmalar && s.qaytarmalar.length > 0) {
-          s.qaytarmalar.forEach((q) => {
-            const qaytarilanMehsul = q.mehsullar.find((qm) => qm.mal_adi === m.mal_adi);
-            if (qaytarilanMehsul) {
-              qaytarilanMiqdar += qaytarilanMehsul.miqdar;
-              qaytarilanMebleg += qaytarilanMehsul.mebleg || 0;
-            }
-          });
-        }
-
-        let status = 'Aktiv';
-        if (qaytarilanMiqdar > 0 && qaytarilanMiqdar < m.miqdar) {
-          status = 'Qismən Qaytarma';
-        } else if (qaytarilanMiqdar === m.miqdar) {
-          status = 'Tam Qaytarma';
-        }
-
-        const orijinalSatis = m.satis_qiymeti * m.miqdar;
-        const mehsulEndirimi = m.endirim_mebleg || 0;
-        let qebzEndirimiHisse = 0;
-        if (s.qebz_endirim > 0 && umumiSatisOrijinal > 0) {
-          const mehsulPayi = orijinalSatis / umumiSatisOrijinal;
-          qebzEndirimiHisse = s.qebz_endirim * mehsulPayi;
-        }
-
-        const totalEndirim = mehsulEndirimi + qebzEndirimiHisse;
-        const cem = orijinalSatis - totalEndirim;
-        const alisMeblegi = m.alis_qiymeti * m.miqdar;
-        const netMiqdar = m.miqdar - qaytarilanMiqdar;
-
-        ws_data.push([
-          s.qebz_nomre,
-          m.mal_kod || '-',
-          m.mal_adi,
-          m.miqdar,
-          parseFloat(alisMeblegi.toFixed(2)),
-          parseFloat(cem.toFixed(2)),
-          parseFloat(mehsulEndirimi.toFixed(2)),
-          parseFloat(qebzEndirimiHisse.toFixed(2)),
-          qaytarilanMiqdar,
-          parseFloat(qaytarilanMebleg.toFixed(2)),
-          status,
-          parseFloat(cem.toFixed(2)),
-          netMiqdar,
-        ]);
-      });
+      return {
+        'Qəbz №': s.receiptNo || s.qebz_nomre || '-',
+        'Tarix': s.createdAt || s.date || s.tarix ? new Date(s.createdAt || s.date || s.tarix).toLocaleString('az-AZ') : '-',
+        'İstifadəçi': s.user?.username || s.kassir || 'Bilinmir',
+        'Müştəri': s.customerName || s.musteri_ad || 'Standart Müştəri',
+        'Məhsul': mehsulAdlari,
+        'Miqdar': miqdar,
+        'Məbləğ': (s.totalAmount || s.umumi_mebleg || 0),
+        'Endirim': (s.discount || s.umumi_endirim || 0),
+        'Yekun': (s.finalAmount !== undefined ? s.finalAmount : (s.yekun_mebleg || 0)),
+        'Status': isReturned ? 'Qaytarılmış' : 'Satıldı',
+        'Ödəniş': s.paymentMethod === 'CARD' ? 'Kart' : (s.paymentMethod === 'CASH' ? 'Nağd' : (s.paymentMethod || s.odenis_nov || '-'))
+      };
     });
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    const wscols = [
-      { wch: 15 },
-      { wch: 12 },
-      { wch: 25 },
-      { wch: 12 },
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 14 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 18 },
-      { wch: 12 },
-      { wch: 12 },
-    ];
-    ws['!cols'] = wscols;
-    XLSX.utils.book_append_sheet(wb, ws, 'Satış Tarixçəsi');
-    XLSX.writeFile(wb, `satis_tarixcesi_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Satışlar");
+    XLSX.writeFile(workbook, 'Satis_Tarixcesi.xlsx');
   };
 
   return (
@@ -188,7 +126,7 @@ function SatisTarixce() {
           <i className="fas fa-history"></i> Satış Tarixçəsi
         </h2>
         <button
-          onClick={handleExport}
+          onClick={handleExportExcel}
           className="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 text-center"
         >
           <i className="fas fa-file-export mr-2"></i> Excel Export
@@ -217,7 +155,16 @@ function SatisTarixce() {
             />
           </div>
           <button
-            onClick={() => { if (fetchSatislar) fetchSatislar(startDate, endDate); }}
+            onClick={async () => {
+              if (fetchSatislar) {
+                setLoading(true);
+                try {
+                  await fetchSatislar(startDate, endDate);
+                } finally {
+                  setLoading(false);
+                }
+              }
+            }}
             className="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center font-medium h-[42px]"
           >
             <i className="fas fa-search mr-2"></i>Axtar
@@ -257,103 +204,109 @@ function SatisTarixce() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full min-w-max whitespace-nowrap">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left">Qəbz №</th>
-                <th className="px-4 py-3 text-left">Tarix</th>
-                <th className="px-4 py-3 text-left">Kassir</th>
-                <th className="px-4 py-3 text-left">Müştəri</th>
-                <th className="px-4 py-3 text-right">Məbləğ</th>
-                <th className="px-4 py-3 text-right">Endirim</th>
-                <th className="px-4 py-3 text-right">Yekun</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Ödəniş</th>
-                <th className="px-4 py-3 text-center">Əməliyyat</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
-                    Satış tapılmadı
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((s, index) => {
-                  const isReturned = s.status === 'RETURNED' || s.status?.includes('Qaytar') || (s.qaytarmalar && s.qaytarmalar.length > 0);
-                  const rowClass = isReturned ? 'bg-red-50 text-gray-900' : '';
-                  return (
-                    <tr key={s.id || index} className={`border-b hover:bg-gray-50 ${rowClass}`}>
-                      <td className="px-4 py-3">
-                        {isReturned && <i className="fas fa-undo mr-1 text-red-500"></i>}
-                        {s.receiptNo || s.qebz_nomre || '-'}
-                      </td>
-                      <td className="px-4 py-3">
-                        {s.createdAt || s.date || s.tarix ? new Date(s.createdAt || s.date || s.tarix).toLocaleString('az-AZ') : '-'}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-700">
-                        {s.user?.username || s.kassir || 'Bilinmir'}
-                      </td>
-                      <td className="px-4 py-3">
-                        {s.customerName || s.musteri_ad || 'Standart Müştəri'}
-                      </td>
-                      <td className="px-4 py-3 text-right">{formatMebleg(s.totalAmount || s.umumi_mebleg || 0)}</td>
-                      <td className="px-4 py-3 text-right text-red-600">
-                        {formatMebleg(s.discount || s.umumi_endirim || 0)}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-blue-600">
-                        {s.finalAmount !== undefined ? `${s.finalAmount} AZN` : formatMebleg(s.yekun_mebleg || 0)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isReturned ? (
-                          <span className="text-red-600 font-bold">Qaytarılmış</span>
-                        ) : (
-                          <span className="text-gray-600 font-semibold">Satıldı</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {s.paymentMethod === 'CARD' ? 'Kart' : (s.paymentMethod === 'CASH' ? 'Nağd' : (s.paymentMethod || s.odenis_nov || '-'))}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => {
-                            setSelectedSatis(s);
-                            openModal('satisDetay');
-                          }}
-                          className="text-blue-600 hover:text-blue-800 mr-2"
-                          title="Detallar"
-                        >
-                          <i className="fas fa-eye"></i>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedSatis(s);
-                            openModal('qebz');
-                          }}
-                          className="text-green-600 hover:text-green-800 mr-2"
-                          title="Qəbz"
-                        >
-                          <i className="fas fa-print"></i>
-                        </button>
-                        <button
-                          onClick={() => handleIadeAc(s)}
-                          className="text-red-500 hover:text-red-700"
-                          title="İadə Et"
-                        >
-                          <i className="fas fa-undo"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="flex justify-center items-center p-10 text-gray-500 font-medium">
+          <i className="fas fa-spinner fa-spin mr-2"></i> Məlumatlar yüklənir...
         </div>
-      </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-max whitespace-nowrap">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left">Qəbz №</th>
+                  <th className="px-4 py-3 text-left">Tarix</th>
+                  <th className="px-4 py-3 text-left">Kassir</th>
+                  <th className="px-4 py-3 text-left">Müştəri</th>
+                  <th className="px-4 py-3 text-right">Məbləğ</th>
+                  <th className="px-4 py-3 text-right">Endirim</th>
+                  <th className="px-4 py-3 text-right">Yekun</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Ödəniş</th>
+                  <th className="px-4 py-3 text-center">Əməliyyat</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="px-4 py-8 text-center text-gray-500">
+                      Satış tapılmadı
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((s, index) => {
+                    const isReturned = s.status === 'RETURNED' || s.status?.includes('Qaytar') || (s.qaytarmalar && s.qaytarmalar.length > 0);
+                    const rowClass = isReturned ? 'bg-red-50 text-gray-900' : '';
+                    return (
+                      <tr key={s.id || index} className={`border-b hover:bg-gray-50 ${rowClass}`}>
+                        <td className="px-4 py-3">
+                          {isReturned && <i className="fas fa-undo mr-1 text-red-500"></i>}
+                          {s.receiptNo || s.qebz_nomre || '-'}
+                        </td>
+                        <td className="px-4 py-3">
+                          {s.createdAt || s.date || s.tarix ? new Date(s.createdAt || s.date || s.tarix).toLocaleString('az-AZ') : '-'}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-700">
+                          {s.user?.username || s.kassir || 'Bilinmir'}
+                        </td>
+                        <td className="px-4 py-3">
+                          {s.customerName || s.musteri_ad || 'Standart Müştəri'}
+                        </td>
+                        <td className="px-4 py-3 text-right">{formatMebleg(s.totalAmount || s.umumi_mebleg || 0)}</td>
+                        <td className="px-4 py-3 text-right text-red-600">
+                          {formatMebleg(s.discount || s.umumi_endirim || 0)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-blue-600">
+                          {s.finalAmount !== undefined ? `${s.finalAmount} AZN` : formatMebleg(s.yekun_mebleg || 0)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {isReturned ? (
+                            <span className="text-red-600 font-bold">Qaytarılmış</span>
+                          ) : (
+                            <span className="text-gray-600 font-semibold">Satıldı</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {s.paymentMethod === 'CARD' ? 'Kart' : (s.paymentMethod === 'CASH' ? 'Nağd' : (s.paymentMethod || s.odenis_nov || '-'))}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedSatis(s);
+                              openModal('satisDetay');
+                            }}
+                            className="text-blue-600 hover:text-blue-800 mr-2"
+                            title="Detallar"
+                          >
+                            <i className="fas fa-eye"></i>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedSatis(s);
+                              openModal('qebz');
+                            }}
+                            className="text-green-600 hover:text-green-800 mr-2"
+                            title="Qəbz"
+                          >
+                            <i className="fas fa-print"></i>
+                          </button>
+                          <button
+                            onClick={() => handleIadeAc(s)}
+                            className="text-red-500 hover:text-red-700"
+                            title="İadə Et"
+                          >
+                            <i className="fas fa-undo"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Sales Detail Modal */}
       <Modal

@@ -13,6 +13,7 @@ function Satis() {
   const [axtar, setAxtar] = useState('');
   const [odenisNov, setOdenisNov] = useState('Nağd');
   const [odenisMebleg, setOdenisMebleg] = useState('');
+  const [loading, setLoading] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem('user')) || {};
 
   const filteredMehsullar = useMemo(() => {
@@ -142,6 +143,7 @@ function Satis() {
       showToast('Səbət boşdur!', 'warning');
       return;
     }
+    setLoading(true);
 
     const qebzNomre = 'QBZ-' + String(data.satislar.length + 1).padStart(6, '0');
     let umumiMebleg = 0,
@@ -233,6 +235,8 @@ function Satis() {
       setMusteriTel('');
     } catch (err) {
       showToast('Satış xətası baş verdi', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -510,10 +514,18 @@ function Satis() {
 
                 <button
                   onClick={satisiTamamla}
-                  disabled={sebet.length === 0}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={sebet.length === 0 || loading}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <i className="fas fa-check"></i> Satışı Tamamla
+                  {loading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i> Yüklənir...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check"></i> Satışı Tamamla
+                    </>
+                  )}
                 </button>
               </>
             )}

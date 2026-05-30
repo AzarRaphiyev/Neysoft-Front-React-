@@ -10,6 +10,7 @@ function MaliyyeUmumi() {
   const { showToast } = useUI();
   const [baslama, setBaslama] = useState(buAyISO() + '-01');
   const [bitme, setBitme] = useState(bugunISO());
+  const [loading, setLoading] = useState(true);
 
   const [stats, setStats] = useState(null);
 
@@ -18,16 +19,22 @@ function MaliyyeUmumi() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchStats = (startDate = null, endDate = null) => {
+  const fetchStats = async (startDate = null, endDate = null) => {
+    setLoading(true);
     const params = {};
     if (startDate && endDate) {
       params.startDate = startDate;
       params.endDate = endDate + 'T23:59:59';
     }
     
-    api.get('/reports/dashboard', { params })
-      .then(res => setStats(res.data?.data || res.data))
-      .catch(() => showToast('Məlumatlar yüklənərkən xəta baş verdi', 'error'));
+    try {
+      const res = await api.get('/reports/dashboard', { params });
+      setStats(res.data?.data || res.data);
+    } catch {
+      showToast('Məlumatlar yüklənərkən xəta baş verdi', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchCustomStats = () => {
@@ -187,106 +194,114 @@ function MaliyyeUmumi() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-green-100 text-sm mb-1">Günlük Gəlir</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats?.dailySales || 0)}</h3>
-          <p className="text-green-100 text-xs mt-2">Aylıq həcmdə: {gunlukGelirFoiz}%</p>
+      {loading ? (
+        <div className="flex justify-center items-center p-10 text-gray-500 font-medium">
+          <i className="fas fa-spinner fa-spin mr-2"></i> Məlumatlar yüklənir...
         </div>
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-blue-100 text-sm mb-1">Günlük Mənfəət</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(dailyProfit)}</h3>
-          <p className="text-blue-100 text-xs mt-2">Aylıq həcmdə: {gunlukMenfeetFoiz}%</p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-emerald-100 text-sm mb-1">Aylıq Gəlir</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats?.monthlySales || 0)}</h3>
-          <p className="text-emerald-100 text-xs mt-2">100%</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-purple-100 text-sm mb-1">Aylıq Mənfəət</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(monthlyProfit)}</h3>
-          <p className="text-purple-100 text-xs mt-2">100%</p>
-        </div>
-        <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-red-100 text-sm mb-1">Günlük Xərc</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats?.dailyExpenses || 0)}</h3>
-        </div>
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-orange-100 text-sm mb-1">Aylıq Xərc</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats?.monthlyExpenses || 0)}</h3>
-        </div>
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-indigo-100 text-sm mb-1">Seçilən Dövrdə Gəlir</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(stats?.totalSales || 0)}</h3>
-        </div>
-        <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl shadow-lg p-6">
-          <p className="text-pink-100 text-sm mb-1">Seçilən Dövrdə Mənfəət</p>
-          <h3 className="text-2xl font-bold">{formatMebleg(customProfit)}</h3>
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-green-100 text-sm mb-1">Günlük Gəlir</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(stats?.dailySales || 0)}</h3>
+              <p className="text-green-100 text-xs mt-2">Aylıq həcmdə: {gunlukGelirFoiz}%</p>
+            </div>
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-blue-100 text-sm mb-1">Günlük Mənfəət</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(dailyProfit)}</h3>
+              <p className="text-blue-100 text-xs mt-2">Aylıq həcmdə: {gunlukMenfeetFoiz}%</p>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-emerald-100 text-sm mb-1">Aylıq Gəlir</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(stats?.monthlySales || 0)}</h3>
+              <p className="text-emerald-100 text-xs mt-2">100%</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-purple-100 text-sm mb-1">Aylıq Mənfəət</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(monthlyProfit)}</h3>
+              <p className="text-purple-100 text-xs mt-2">100%</p>
+            </div>
+            <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-red-100 text-sm mb-1">Günlük Xərc</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(stats?.dailyExpenses || 0)}</h3>
+            </div>
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-orange-100 text-sm mb-1">Aylıq Xərc</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(stats?.monthlyExpenses || 0)}</h3>
+            </div>
+            <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-indigo-100 text-sm mb-1">Seçilən Dövrdə Gəlir</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(stats?.totalSales || 0)}</h3>
+            </div>
+            <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl shadow-lg p-6">
+              <p className="text-pink-100 text-sm mb-1">Seçilən Dövrdə Mənfəət</p>
+              <h3 className="text-2xl font-bold">{formatMebleg(customProfit)}</h3>
+            </div>
+          </div>
 
-      {/* Günlük Pul Axını */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-xl font-semibold mb-4">
-          <i className="fas fa-chart-line mr-2"></i> Günlük Pul Axını
-        </h3>
-        <div className="overflow-x-auto w-full">
-          <table className="w-full min-w-max whitespace-nowrap">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="px-4 py-3 text-left">Tarix</th>
-                <th className="px-4 py-3 text-right">Gəlir</th>
-                <th className="px-4 py-3 text-right">Xərc</th>
-                <th className="px-4 py-3 text-right">Mənfəət</th>
-                <th className="px-4 py-3 text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(gunlukAxin).length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                    Bu tarix aralığında məlumat yoxdur
-                  </td>
-                </tr>
-              ) : (
-                Object.keys(gunlukAxin)
-                  .sort()
-                  .reverse() // Ən yeni tarixlər üstə olsun deyə tərsinə sıralanır
-                  .map((tarix) => {
-                    const axin = gunlukAxin[tarix];
-                    const netMenfeet = axin.menfeet - axin.xerc;
-                    const statusClass = netMenfeet >= 0 ? 'text-green-600' : 'text-red-600';
-                    const statusIcon = netMenfeet >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-                    const statusText = netMenfeet >= 0 ? 'Mənfəət' : 'Zərər';
+          {/* Günlük Pul Axını */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-xl font-semibold mb-4">
+              <i className="fas fa-chart-line mr-2"></i> Günlük Pul Axını
+            </h3>
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-max whitespace-nowrap">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Tarix</th>
+                    <th className="px-4 py-3 text-right">Gəlir</th>
+                    <th className="px-4 py-3 text-right">Xərc</th>
+                    <th className="px-4 py-3 text-right">Mənfəət</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(gunlukAxin).length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                        Bu tarix aralığında məlumat yoxdur
+                      </td>
+                    </tr>
+                  ) : (
+                    Object.keys(gunlukAxin)
+                      .sort()
+                      .reverse() // Ən yeni tarixlər üstə olsun deyə tərsinə sıralanır
+                      .map((tarix) => {
+                        const axin = gunlukAxin[tarix];
+                        const netMenfeet = axin.menfeet - axin.xerc;
+                        const statusClass = netMenfeet >= 0 ? 'text-green-600' : 'text-red-600';
+                        const statusIcon = netMenfeet >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                        const statusText = netMenfeet >= 0 ? 'Mənfəət' : 'Zərər';
 
-                    return (
-                      <tr key={tarix} className="border-b hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-medium">
-                          {new Date(tarix).toLocaleDateString('az-AZ')}
-                        </td>
-                        <td className="px-4 py-3 text-right text-green-600 font-semibold">
-                          {formatMebleg(axin.gelir)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-red-600 font-semibold">
-                          {formatMebleg(axin.xerc)}
-                        </td>
-                        <td className={`px-4 py-3 text-right font-bold ${statusClass}`}>
-                          {formatMebleg(netMenfeet)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`${statusClass} flex items-center gap-2`}>
-                            <i className={`fas ${statusIcon}`}></i> {statusText}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                        return (
+                          <tr key={tarix} className="border-b hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-3 font-medium">
+                              {new Date(tarix).toLocaleDateString('az-AZ')}
+                            </td>
+                            <td className="px-4 py-3 text-right text-green-600 font-semibold">
+                              {formatMebleg(axin.gelir)}
+                            </td>
+                            <td className="px-4 py-3 text-right text-red-600 font-semibold">
+                              {formatMebleg(axin.xerc)}
+                            </td>
+                            <td className={`px-4 py-3 text-right font-bold ${statusClass}`}>
+                              {formatMebleg(netMenfeet)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`${statusClass} flex items-center gap-2`}>
+                                <i className={`fas ${statusIcon}`}></i> {statusText}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
